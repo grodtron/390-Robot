@@ -2,4 +2,4 @@
 .obj
 *.elf
 *.hex
-
+a.out
