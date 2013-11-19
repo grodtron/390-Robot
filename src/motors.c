@@ -58,7 +58,7 @@ static uint16_t current_timeout;
 
 #define INVERTED_OUTPUT 1
 
-void init_motors(){
+void motors_init(){
 
    static_assert((INVERTED_OUTPUT == 1) || (INVERTED_OUTPUT == 0))
 
@@ -68,14 +68,14 @@ void init_motors(){
          |  (1 << DDB0);                // Set Motor-Right Backwards as output
 
    DDRD  |= (1 << DDD5) | (1 << DDD6) | (1 << DDD7); // Set other motor-dir lines as ouput
-   
+
    TCCR1A = (1 << COM1A1) | (INVERTED_OUTPUT << COM1A0) // Set OC1A as PWM output (page 98)
           | (1 << COM1B1) | (INVERTED_OUTPUT << COM1B0) // Set OC1B as PWM output (page 98)
           | (0 << FOC1A)  | (0 << FOC1B)  // Set these 0 (unused, see page 99)
           | (0 << WGM11)  | (1 << WGM10)  // First half of Fast PWM, 8-bit (page 99)
           ;
 
-   TCCR1B = (0 << WGM13)  | (1 << WGM12)  // Second half of Fast PWM, 8-bit (page 99) 
+   TCCR1B = (0 << WGM13)  | (1 << WGM12)  // Second half of Fast PWM, 8-bit (page 99)
           | (0 << ICNC1)  | (0 << ICES1)  // Stuff we don't care about (page 100)
           | (0 << CS12) // Clock select, we use no prescaler, since we are in 10 bit mode
            |(0 << CS11) // this gives a PWM frequency of 1MHz/256 ~= 4kHZ which is perfect
@@ -83,8 +83,8 @@ void init_motors(){
           ;
 
    // turns motors off and resets tweens
-   hard_stop();
-   
+   motors_hard_stop();
+
    // As per table 39 on page 99, we can safely also use this timer for our other timing purposes
    // using the overflow interrupt, which is set once per PWM cycle ~= 4 times per ms.
    //
@@ -106,9 +106,9 @@ ISR(TIMER1_OVF_vect){
 
    // This lets the timeout approximately represent milliseconds
    if(0 == n_ticks % 4 && current_timeout){
-      --current_timeout; 
+      --current_timeout;
       if( ! current_timeout){
-         add_event(MOVEMENT_COMPLETE);
+         event_q_add_event(MOVEMENT_COMPLETE);
       }
    }
 
@@ -168,13 +168,13 @@ void _tween_motor_speed(motor_tween_t * tw, uint8_t speed, motor_dir_t dir){
 
 }
 
-void set_speed(uint8_t speed, motor_dir_t dir, uint16_t timeout){
+void motors_set_speed(uint8_t speed, motor_dir_t dir, uint16_t timeout){
    _tween_motor_speed(&l_motor_tween, speed, dir);
    _tween_motor_speed(&r_motor_tween, speed, dir);
    current_timeout = timeout;
 }
 
-void turn_in_arc(uint8_t speed, motor_dir_t dir, turn_dir_t turn_dir, uint16_t radius, uint16_t timeout){
+void motors_turn_in_arc(uint8_t speed, motor_dir_t dir, motor_turn_dir_t turn_dir, uint16_t radius, uint16_t timeout){
    // wheel base is 146mm (from center of one wheel to senter of other wheel).
    //
    // This means that when we turn. our wheels trace out two arcs, one with radius
@@ -202,7 +202,7 @@ void turn_in_arc(uint8_t speed, motor_dir_t dir, turn_dir_t turn_dir, uint16_t r
    current_timeout = timeout;
 }
 
-void rotate(uint8_t speed, turn_dir_t dir, uint16_t timeout){
+void motors_rotate(uint8_t speed, motor_turn_dir_t dir, uint16_t timeout){
    if(dir == LEFT){
       _tween_motor_speed(&l_motor_tween, speed, REV);
       _tween_motor_speed(&r_motor_tween, speed, FWD);
@@ -214,11 +214,11 @@ void rotate(uint8_t speed, turn_dir_t dir, uint16_t timeout){
    current_timeout = timeout;
 }
 
-bool movement_in_progress(){
+bool motors_movement_in_progress(){
    return current_timeout != 0;
 }
 
-void hard_stop(){
+void motors_hard_stop(){
 #ifdef __AVR__
    // Turn all motors off, and set them non-tweening
    l_motor_tween.curr_speed = 0;
@@ -247,7 +247,7 @@ void hard_stop(){
 
 int main(int argc, const char *argv[])
 {
-   
+
    printf("Testing Motor Tween!\n");
 
 
@@ -293,7 +293,7 @@ int main(int argc, const char *argv[])
    uint8_t slow_speed = (uint8_t)( (((uint16_t)speed)*(radius - 146)) / ((uint16_t)radius) );
 
    assert(slow_speed > 0);
-   
+
    printf("All tests passed! slow_speed = %d\n", slow_speed);
 
    return 0;

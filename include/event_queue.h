@@ -16,9 +16,9 @@ typedef enum {
 } event_t;
 
 // This should ONLY be called from ISRs! No main loop!!
-void add_event(event_t event);
+void event_q_add_event(event_t event);
 
 // NB This function must ONLY be called from main loop code!!!
-event_t get_next_event();
+event_t event_q_get_next_event();
 
 #endif

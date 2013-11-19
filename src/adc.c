@@ -1,27 +1,27 @@
 #include <inttypes.h>
 #include <avr/interrupt.h>
 
-typedef enum {
-   LEFT_LINE_SENSOR  = 0,
-   RIGHT_LINE_SENSOR = 1,
-   LEFT_PROX_SENSOR  = 2,
-   RIGHT_PROX_SENSOR = 3
-} sensor_t;
+#include "../include/adc.h"
+#include "../include/leds.h"
+#include "../include/event_queue.h"
+#include "../include/motors.h"
 
 static sensor_t current_sensor;
 
 #define CURRENT_SENSOR_IS_LINE_SENSOR() (current_sensor <= RIGHT_LINE_SENSOR)
 
 static uint8_t sensor_channel[4];
+
+static uint8_t sensor_readings[4] = {0,0,0,0};
+
+static uint8_t LINE_SENSOR_THRESHOLD = 128;
+
+void adc_init(){
    sensor_channel[LEFT_LINE_SENSOR]  = 1;
    sensor_channel[RIGHT_LINE_SENSOR] = 0;
    // TODO - determine which is which
    sensor_channel[LEFT_PROX_SENSOR]  = 4;
    sensor_channel[RIGHT_PROX_SENSOR] = 3;
-
-static uint8_t sensor_readings[4] = {0,0,0,0};
-
-void init_adc(){
 
    ADMUX  = (0 << REFS1)  | (0 << REFS0) // External AREF (page 206)
           | (1 << ADLAR)                 // Left adjust the result, we only need 8 bits really
@@ -62,18 +62,30 @@ void init_adc(){
           // The ADC clock frequency is 62.5kHz
 
    // TODO - business logic initialization
-   
+
    // Woohoo, ADC init'd
 
 }
 
 // NB - assume init_adc called already
-void start_adc(){
+void adc_start(){
    current_sensor = LEFT_LINE_SENSOR;
 
    ADMUX  |= (sensor_channel[current_sensor] << MUX0); // ADC mux channel select   (page 206)
 
    ADCSRA |= (1 << ADSC);
+}
+
+
+line_dir_t adc_where_is_line(){
+   line_dir_t val = LINE_NONE;
+   if(sensor_readings[LEFT_LINE_SENSOR] < LINE_SENSOR_THRESHOLD){
+      val |= LINE_LEFT;
+   }
+   if(sensor_readings[RIGHT_LINE_SENSOR] < LINE_SENSOR_THRESHOLD){
+      val |= LINE_RIGHT;
+   }
+   return val;
 }
 
 
@@ -90,29 +102,39 @@ ISR(ADC_vect){
 
    if(CURRENT_SENSOR_IS_LINE_SENSOR()){
 
-      if(reading < threshold && sensor_readings[current_sensor] >= threshold){
+      if(reading < LINE_SENSOR_THRESHOLD && sensor_readings[current_sensor] >= LINE_SENSOR_THRESHOLD){
          // Then we hit the edge!! Panic!! Ahhhhjhh!!
          motors_hard_stop();
-         event_q_add_event(EDGE_DETECTED);
+         event_q_add_event(LINE_DETECTED);
       }
 
-      if(n_ticks < 193){
-         // We just toggle between our two line sensors
+      if(n_ticks < 192){
+         // Less than ~40ms has elapsed, we just toggle to the
+         // opposite line sensor and keep going
          if(current_sensor == LEFT_LINE_SENSOR){
             current_sensor = RIGHT_LINE_SENSOR;
          }else{
-            current_sensor = RIGHT_LINE_SENSOR;
+            current_sensor = LEFT_LINE_SENSOR;
          }
       }else{
          // 193*0.208==40.144ms have passed, let's check out our IR sensors
+         // Reset the clock
          n_ticks = 0;
+         led_toggle_yellow();
+         // Set our next sensor to the first of the two proximity sensors
+         // (always left to right)
          current_sensor = LEFT_PROX_SENSOR;
       }
    }else{
       // We always read left ot right
       if(current_sensor == LEFT_PROX_SENSOR){
+         // Switch to the other sensor and read it
          current_sensor =  RIGHT_PROX_SENSOR;
       }else{
+         // We've read both of our proximity sensors, so new data is
+         // available to the main loop, and we'll switch back to reading
+         // the line sensors
+         //
          // We don't actually know which line sensor we should
          // be on, but we also don't really care, it doesn't make
          // any difference really.

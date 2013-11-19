@@ -27,7 +27,7 @@ static inline void swap(event_t * a, event_t * b){
 }
 
 // This should ONLY be called from ISRs! No main loop!!
-void add_event(event_t event){
+void event_q_add_event(event_t event){
 
    size_t i;
 
@@ -77,7 +77,7 @@ void add_event(event_t event){
 }
 
 // NB This function must ONLY be called from main loop code!!!
-event_t get_next_event(){
+event_t event_q_get_next_event(){
 
    #ifdef __AVR__
    cli();
@@ -96,7 +96,7 @@ event_t get_next_event(){
    event_queue[0]            = event_queue[event_q_next];
    event_queue[event_q_next] = NULL_EVENT;
 
-   
+
    size_t left=1, right=2, i=0, next;
    // NB - we assume unused slots are always NULL_EVENT
    while(left < event_q_next || right < event_q_next){
@@ -120,7 +120,7 @@ event_t get_next_event(){
    #endif
 
    return return_val;
-   
+
 }
 
 
@@ -195,7 +195,7 @@ int main()
 
    }
    printf("\n\nAll tests passed!!\n\n");
-   
+
    return 0;
 }
 

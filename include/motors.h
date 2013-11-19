@@ -19,7 +19,7 @@ typedef enum {
 typedef enum {
    LEFT,
    RIGHT
-} turn_dir_t;
+} motor_turn_dir_t;
 
 typedef enum {
    FWD,
@@ -27,16 +27,16 @@ typedef enum {
 } motor_dir_t;
 
 
-void init_motors();
+void motors_init();
 
-void set_speed(uint8_t speed, motor_dir_t dir, uint16_t timeout);
+void motors_set_speed(uint8_t speed, motor_dir_t dir, uint16_t timeout);
 
-void turn_in_arc(uint8_t speed, motor_dir_t dir, turn_dir_t turn_dir, uint16_t radius, uint16_t timeout);
+void motors_turn_in_arc(uint8_t speed, motor_dir_t dir, motor_turn_dir_t turn_dir, uint16_t radius, uint16_t timeout);
 
-void rotate(uint8_t speed, turn_dir_t dir, uint16_t timeout);
+void motors_rotate(uint8_t speed, motor_turn_dir_t dir, uint16_t timeout);
 
-void hard_stop();
+void motors_hard_stop();
 
-bool movement_in_progress();
+bool motors_movement_in_progress();
 
 #endif
