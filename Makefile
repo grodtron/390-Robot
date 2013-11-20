@@ -4,7 +4,7 @@ MCU     = atmega8
 OPT_LVL = 1
 
 # Warning flags (what did you expect)
-WARNINGS= -Wall -Wextra -Werror
+WARNINGS= -Wall -Wextra -Werror -pedantic
 
 # C Compiler
 CC      = avr-gcc
