@@ -19,13 +19,13 @@
 #define PASTE2(a,  b) _PASTE2(a, b)
 #define PASTE3(a,  b, c) _PASTE3(a, b, c)
 
-#define RED_REG D
+#define RED_REG C
 #define GRN_REG C
-#define YLW_REG C
+#define YLW_REG D
 
-#define RED_PIN 3
+#define RED_PIN 2
 #define GRN_PIN 5
-#define YLW_PIN 2
+#define YLW_PIN 3
 
 #define RED_NAME red
 #define GRN_NAME green
@@ -58,13 +58,13 @@ void leds_init(){
    DDR(YLW) |= (1 << DDXN(YLW));
 }
 
-DEFINE_TOGGLE(RED);
-DEFINE_TOGGLE(YLW);
-DEFINE_TOGGLE(GRN);
+DEFINE_TOGGLE(RED)
+DEFINE_TOGGLE(YLW)
+DEFINE_TOGGLE(GRN)
 
-DEFINE_SET(RED);
-DEFINE_SET(YLW);
-DEFINE_SET(GRN);
+DEFINE_SET(RED)
+DEFINE_SET(YLW)
+DEFINE_SET(GRN)
 
 void led_set_rgy(uint8_t r, uint8_t g, uint8_t y){
    led_set_red(r);

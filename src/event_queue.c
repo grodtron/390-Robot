@@ -26,6 +26,14 @@ static inline void swap(event_t * a, event_t * b){
    *b = t;
 }
 
+void event_q_init(){
+   uint8_t i;
+   for(i = 0; i < HEAP_SIZE; ++i){
+      event_queue[i] = NULL_EVENT;
+   }
+   event_q_next = 0;
+}
+
 // This should ONLY be called from ISRs! No main loop!!
 void event_q_add_event(event_t event){
 
@@ -83,36 +91,40 @@ event_t event_q_get_next_event(){
    cli();
    #endif
 
+   event_t return_val;
+
    if(event_q_next == 0){
-      return NULL_EVENT;
-   }
+      return_val = NULL_EVENT;
+   }else{
 
-   // Save highest priority event to return at the end
-   event_t return_val = event_queue[0];
+      // Save highest priority event to return at the end
+      return_val = event_queue[0];
 
-   // Move bottom event to top
-   --event_q_next;
+      // Move bottom event to top
+      --event_q_next;
 
-   event_queue[0]            = event_queue[event_q_next];
-   event_queue[event_q_next] = NULL_EVENT;
+      event_queue[0]            = event_queue[event_q_next];
+      event_queue[event_q_next] = NULL_EVENT;
 
 
-   size_t left=1, right=2, i=0, next;
-   // NB - we assume unused slots are always NULL_EVENT
-   while(left < event_q_next || right < event_q_next){
-      if(event_queue[left] > event_queue[i] || event_queue[right] > event_queue[i]){
+      size_t left=1, right=2, i=0, next;
+      // NB - we assume unused slots are always NULL_EVENT
+      while(left < event_q_next || right < event_q_next){
+         if(event_queue[left] > event_queue[i] || event_queue[right] > event_queue[i]){
 
-         next = event_queue[left] > event_queue[right] ? left : right;
+            next = event_queue[left] > event_queue[right] ? left : right;
 
-         swap(event_queue + i, event_queue + next);
+            swap(event_queue + i, event_queue + next);
 
-         i     = next;
-         left  = (2*i) + 1;
-         right = (2*i) + 2;
+            i     = next;
+            left  = (2*i) + 1;
+            right = (2*i) + 2;
 
-      }else{
-         break;
+         }else{
+            break;
+         }
       }
+
    }
 
    #ifdef __AVR__

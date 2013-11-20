@@ -16,6 +16,8 @@ static uint8_t sensor_readings[4] = {0,0,0,0};
 
 static uint8_t LINE_SENSOR_THRESHOLD = 128;
 
+static const uint8_t ADMUX_MASK = ~((1 << MUX0) | (1 << MUX1) | (1 << MUX2) | (1 << MUX3));
+
 void adc_init(){
    sensor_channel[LEFT_LINE_SENSOR]  = 1;
    sensor_channel[RIGHT_LINE_SENSOR] = 0;
@@ -148,6 +150,7 @@ ISR(ADC_vect){
    sensor_readings[current_sensor] = reading;
 
    // Change the channel to the new sensor
+   ADMUX  &= ADMUX_MASK;
    ADMUX  |= (sensor_channel[current_sensor] << MUX0);
 
    // Start the next conversion

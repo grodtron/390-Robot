@@ -15,6 +15,8 @@ typedef enum {
    NULL_EVENT = 0
 } event_t;
 
+void event_q_init();
+
 // This should ONLY be called from ISRs! No main loop!!
 void event_q_add_event(event_t event);
 

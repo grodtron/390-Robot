@@ -90,13 +90,17 @@ int main()
 {
 
    motors_init();
+   event_q_init();
    adc_init();
+   leds_init();
 
    sei();
 
    adc_start();
 
    while(1){
+
+      // Testing in the lab showed this runs every ~95us
 
       event_t e = event_q_get_next_event();
 
