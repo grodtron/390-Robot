@@ -97,8 +97,18 @@ line_dir_t adc_where_is_line(){
 ISR(ADC_vect){
 
    // Each call of this ISR represents the passage of 0.208ms
-   static uint8_t n_ticks = 0;
-   ++n_ticks;
+
+   // We only want to check the IR sensors every 40ms or so, so we
+   // use a counter to keep track of the time since the last check
+   const  uint8_t prox_sensor_counter_max = 192;
+   static uint8_t prox_sensor_counter     = 0;
+   ++prox_sensor_counter;
+
+   // We don't want to be constantly triggering the line sensor. We'll add some
+   // hysteresis (at least I think it's hysteresis). We won't trigger an event
+   // unless the last 16 reads have been free of anything
+   const  uint8_t  line_sensor_hysteresis_counter_max = 16;
+   static uint8_t  line_sensor_hysteresis_counter     = 0;
 
    uint8_t reading = ADCH; // We only read the high 8 bits (see page 208)
 
@@ -106,11 +116,20 @@ ISR(ADC_vect){
 
       if(reading < LINE_SENSOR_THRESHOLD && sensor_readings[current_sensor] >= LINE_SENSOR_THRESHOLD){
          // Then we hit the edge!! Panic!! Ahhhhjhh!!
-         motors_hard_stop();
-         event_q_add_event(LINE_DETECTED);
+         if(line_sensor_hysteresis_counter == line_sensor_hysteresis_counter_max){
+            // But acutally, only panic if we haven't paniced recently
+            motors_hard_stop();
+            event_q_add_event(LINE_DETECTED);
+         }
+
+         line_sensor_hysteresis_counter = 0;
+      }else{
+         if(line_sensor_hysteresis_counter < line_sensor_hysteresis_counter_max){
+            ++line_sensor_hysteresis_counter;
+         }
       }
 
-      if(n_ticks < 192){
+      if(prox_sensor_counter < prox_sensor_counter_max){
          // Less than ~40ms has elapsed, we just toggle to the
          // opposite line sensor and keep going
          if(current_sensor == LEFT_LINE_SENSOR){
@@ -121,7 +140,7 @@ ISR(ADC_vect){
       }else{
          // 193*0.208==40.144ms have passed, let's check out our IR sensors
          // Reset the clock
-         n_ticks = 0;
+         prox_sensor_counter = 0;
          led_toggle_yellow();
          // Set our next sensor to the first of the two proximity sensors
          // (always left to right)
