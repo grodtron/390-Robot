@@ -17,7 +17,7 @@ LDFLAGS = -mmcu=$(MCU) -O$(OPT_LVL) $(WARNINGS)
 # Gotta call it something...
 PROJ    = robot
 # Source files that we will use
-SRCS    := driver.c motors.c event_queue.c adc.c leds.c
+SRCS    := adc.c contacts.c driver.c event_queue.c leds.c motors.c
 
 # Stuff related to generating the actual hex format
 OBJCOPY = avr-objcopy
@@ -43,7 +43,7 @@ MAKE_OBJ_DIR = mkdir -p $(OBJ_DIR)
 SRC_DIR =  src
 
 # Generate exact dependencies using a smart method that I found online.
-# 
+#
 # The basic idea is that we don't need to know the dependencies until
 # after the first time we build a file. If the file itself changes, then
 # obviously we will have to recalculate its dependencies, but %.c is always
@@ -83,7 +83,7 @@ $(OBJ_DIR):
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@$(MAKE_OBJ_DIR)
 	$(CC) $(CCFLAGS) $< -o $@
-	@$(MAKE_DEPEND) 
+	@$(MAKE_DEPEND)
 
 # Our ELF file requires all our o files, and is fairly simple to make
 $(ELF_TRG): $(addprefix $(OBJ_DIR)/, $(SRCS:%.c=%.o))
