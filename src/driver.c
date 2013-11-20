@@ -16,7 +16,7 @@ void handle_movement_complete(){
    if(dir){
          motors_set_speed(255, FWD, 1000);
    }else{
-         motors_set_speed(255, REV, 1000);
+         motors_set_speed(0,   FWD, 500);
    }
 }
 
@@ -64,12 +64,11 @@ int main()
       switch(e){
 
          case MOVEMENT_COMPLETE:
-            led_set_red(0);
             led_toggle_green();
             handle_movement_complete();
             break;
          case LINE_DETECTED:
-            led_set_rgy(1, 0, 0);
+            led_toggle_red(0);
             handle_line_detected();
             break;
          case NEW_PROXIMITY_READINGS:

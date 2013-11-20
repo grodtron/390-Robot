@@ -56,7 +56,7 @@ static uint16_t current_timeout;
                                     } \
                                }while(0)
 
-#define INVERTED_OUTPUT 1
+#define INVERTED_OUTPUT 0
 
 void motors_init(){
 
