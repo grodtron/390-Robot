@@ -77,7 +77,7 @@ void motors_init(){
 
    TCCR1B = (0 << WGM13)  | (1 << WGM12)  // Second half of Fast PWM, 8-bit (page 99)
           | (0 << ICNC1)  | (0 << ICES1)  // Stuff we don't care about (page 100)
-          | (0 << CS12) // Clock select, we use no prescaler, since we are in 10 bit mode
+          | (0 << CS12) // Clock select, we use no prescaler, since we are in 8 bit mode
            |(0 << CS11) // this gives a PWM frequency of 1MHz/256 ~= 4kHZ which is perfect
            |(1 << CS10) // for our uses. (page 100)
           ;
