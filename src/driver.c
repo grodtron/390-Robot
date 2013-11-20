@@ -9,60 +9,15 @@
 #include "../include/event_queue.h"
 
 void handle_movement_complete(){
-   static uint8_t next = 0;
 
-   if( motors_movement_in_progress() ){
-      // False alarm, there actually is a move in progress already
-      return;
-   }
+   static uint8_t dir = 1;
+   dir = !dir;
 
-   switch(next){
-
-      case 0:
+   if(dir){
          motors_set_speed(255, FWD, 1000);
-         break;
-      case 1:
-         motors_rotate(255, LEFT, 500);
-         break;
-      case 2:
+   }else{
          motors_set_speed(255, REV, 1000);
-         break;
-      case 3:
-         motors_rotate(255, RIGHT, 500);
-         break;
-      case 4:
-      case 6:
-         motors_turn_in_arc(255, FWD, RIGHT, 150, 750);
-         break;
-      case 5:
-      case 7:
-         motors_turn_in_arc(255, FWD, LEFT, 150, 750);
-         break;
-      case 8:
-      case 10:
-         motors_turn_in_arc(255, REV, RIGHT, 150, 750);
-         break;
-      case 9:
-      case 11:
-         motors_turn_in_arc(255, REV, LEFT, 150, 750);
-         break;
-      case 12:
-         motors_set_speed(128, FWD, 500);
-         break;
-      case 13:
-         motors_rotate(255, RIGHT, 500);
-         break;
-      case 14:
-         motors_rotate(255, LEFT, 500);
-         break;
-      case 15:
-      default:
-         motors_hard_stop();
-         motors_set_speed(0, FWD, 1500);
-         break;
    }
-
-   next = (next + 1) % 16;
 }
 
 void handle_line_detected(){
@@ -97,6 +52,8 @@ int main()
    sei();
 
    adc_start();
+
+   motors_set_speed(255, FWD, 1000);
 
    while(1){
 

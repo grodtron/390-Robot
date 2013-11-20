@@ -115,6 +115,10 @@ ISR(ADC_vect){
    if(CURRENT_SENSOR_IS_LINE_SENSOR()){
 
       if(reading < LINE_SENSOR_THRESHOLD && sensor_readings[current_sensor] >= LINE_SENSOR_THRESHOLD){
+
+
+         led_toggle_yellow();
+
          // Then we hit the edge!! Panic!! Ahhhhjhh!!
          if(line_sensor_hysteresis_counter == line_sensor_hysteresis_counter_max){
             // But acutally, only panic if we haven't paniced recently
@@ -141,7 +145,6 @@ ISR(ADC_vect){
          // 193*0.208==40.144ms have passed, let's check out our IR sensors
          // Reset the clock
          prox_sensor_counter = 0;
-         led_toggle_yellow();
          // Set our next sensor to the first of the two proximity sensors
          // (always left to right)
          current_sensor = LEFT_PROX_SENSOR;
