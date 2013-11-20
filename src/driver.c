@@ -7,6 +7,7 @@
 #include "../include/motors.h"
 #include "../include/leds.h"
 #include "../include/event_queue.h"
+#include "../include/contacts.h"
 
 void handle_movement_complete(){
 
@@ -24,14 +25,14 @@ void handle_line_detected(){
    switch(adc_where_is_line()){
       case LINE_LEFT:
          // Arc backwards to the left with a 1 foot radius for half a second
-         motors_turn_in_arc(255, REV, LEFT, 300, 500);
+         motors_turn_in_arc(255, REV, RIGHT, 300, 1000);
          break;
 
       // For now for testing treat these two cases the same
       case LINE_RIGHT:
       case LINE_BOTH:
          // Arc backwards to the right with a 1 foot radius for half a second
-         motors_turn_in_arc(255, REV, RIGHT, 300, 500);
+         motors_turn_in_arc(255, REV, LEFT, 300, 1000);
          break;
 
       // False alarm I guess, do nothing (TODO - is this the correct behaviour?)
@@ -41,10 +42,27 @@ void handle_line_detected(){
    }
 }
 
+void handle_front_contact(){
+   switch(contacts_get_position()){
+      case CONTACT_FRONT_LEFT:
+         motors_turn_in_arc(255, FWD, LEFT, 170, 750);
+         break;
+      case CONTACT_FRONT_RIGHT:
+         motors_turn_in_arc(255, FWD, RIGHT, 170, 750);
+         break;
+      case CONTACT_FRONT_LEFT | CONTACT_FRONT_RIGHT:
+         motors_set_speed(255, FWD, 750);
+         break;
+      default:
+         break;
+   }
+}
+
 int main()
 {
 
    motors_init();
+   contacts_init();
    event_q_init();
    adc_init();
    leds_init();
@@ -63,16 +81,17 @@ int main()
 
       switch(e){
 
-         case MOVEMENT_COMPLETE:
-            led_toggle_green();
-            handle_movement_complete();
-            break;
          case LINE_DETECTED:
-            led_toggle_red(0);
             handle_line_detected();
             break;
-         case NEW_PROXIMITY_READINGS:
-            // do nothing
+         case CONTACT_DETECTED_BOTH:
+         case CONTACT_DETECTED_FRONT:
+            handle_front_contact();
+            break;
+         case CONTACT_DETECTED_REAR:
+            break;
+         case MOVEMENT_COMPLETE:
+            handle_movement_complete();
             break;
          default:
             break;

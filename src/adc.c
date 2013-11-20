@@ -116,9 +116,6 @@ ISR(ADC_vect){
 
       if(reading < LINE_SENSOR_THRESHOLD && sensor_readings[current_sensor] >= LINE_SENSOR_THRESHOLD){
 
-
-         led_toggle_yellow();
-
          // Then we hit the edge!! Panic!! Ahhhhjhh!!
          if(line_sensor_hysteresis_counter == line_sensor_hysteresis_counter_max){
             // But acutally, only panic if we haven't paniced recently
