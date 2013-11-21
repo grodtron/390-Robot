@@ -5,37 +5,25 @@
 
 #include "../include/adc.h"
 #include "../include/motors.h"
+#include "../include/movement_manager.h"
 #include "../include/leds.h"
 #include "../include/event_queue.h"
 #include "../include/contacts.h"
 
 void handle_movement_complete(){
 
-   static uint8_t dir = 1;
-   dir = !dir;
+   movman_current_move_completed();
 
-   if(dir){
-         motors_set_speed(255, FWD, 1000);
-   }else{
-         motors_set_speed(0,   FWD, 500);
-   }
+   movman_schedule_move(FORWARD_THEN_WIDE_TURN_RIGHT, TO_SEARCH);
+
 }
 
 void handle_line_detected(){
    switch(adc_where_is_line()){
       case LINE_LEFT:
-         // Arc backwards to the left with a 1 foot radius for half a second
-         motors_turn_in_arc(255, REV, RIGHT, 300, 1000);
-         break;
-
-      // For now for testing treat these two cases the same
       case LINE_RIGHT:
       case LINE_BOTH:
-         // Arc backwards to the right with a 1 foot radius for half a second
-         motors_turn_in_arc(255, REV, LEFT, 300, 1000);
-         break;
-
-      // False alarm I guess, do nothing (TODO - is this the correct behaviour?)
+         movman_schedule_move(BACKUP_THEN_TURN_90_CCW, TO_AVOID_EDGE);
       case LINE_NONE:
       default:
          break;
@@ -45,13 +33,16 @@ void handle_line_detected(){
 void handle_front_contact(){
    switch(contacts_get_position()){
       case CONTACT_FRONT_LEFT:
-         motors_turn_in_arc(255, FWD, LEFT, 170, 750);
+         movman_schedule_motor_instruction(TO_AVOID_FIREPIT,
+            &motors_turn_in_arc, 255, FWD, LEFT, 170, 750);
          break;
       case CONTACT_FRONT_RIGHT:
-         motors_turn_in_arc(255, FWD, RIGHT, 170, 750);
+         movman_schedule_motor_instruction(TO_AVOID_FIREPIT,
+            &motors_turn_in_arc, 255, FWD, RIGHT, 170, 750);
          break;
       case CONTACT_FRONT_LEFT | CONTACT_FRONT_RIGHT:
-         motors_set_speed(255, FWD, 750);
+         movman_schedule_motor_instruction(TO_AVOID_FIREPIT,
+            &motors_set_speed, 255, FWD, 0, 0, 750);
          break;
       default:
          break;
@@ -62,6 +53,7 @@ int main()
 {
 
    motors_init();
+   movman_init();
    contacts_init();
    event_q_init();
    adc_init();
@@ -71,7 +63,7 @@ int main()
 
    adc_start();
 
-   motors_set_speed(255, FWD, 1000);
+   movman_schedule_move(SPIRAL_OUTWARDS, TO_SEARCH);
 
    while(1){
 

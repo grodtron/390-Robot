@@ -8,6 +8,7 @@
 #include "../include/motors.h"
 #include "../include/event_queue.h"
 #include "../include/static_assert.h"
+#include "../include/unused_param.h"
 
 typedef struct {
    uint8_t curr_speed;
@@ -168,7 +169,11 @@ void _tween_motor_speed(motor_tween_t * tw, uint8_t speed, motor_dir_t dir){
 
 }
 
-void motors_set_speed(uint8_t speed, motor_dir_t dir, uint16_t timeout){
+void motors_set_speed(uint8_t speed, motor_dir_t dir, motor_turn_dir_t dummy1, uint16_t dummy2, uint16_t timeout){
+
+   UNUSED_PARAM(dummy1);
+   UNUSED_PARAM(dummy2);
+
    _tween_motor_speed(&l_motor_tween, speed, dir);
    _tween_motor_speed(&r_motor_tween, speed, dir);
    current_timeout = timeout;
@@ -202,7 +207,11 @@ void motors_turn_in_arc(uint8_t speed, motor_dir_t dir, motor_turn_dir_t turn_di
    current_timeout = timeout;
 }
 
-void motors_rotate(uint8_t speed, motor_turn_dir_t dir, uint16_t timeout){
+void motors_rotate(uint8_t speed, motor_dir_t dummy1, motor_turn_dir_t dir, uint16_t dummy2, uint16_t timeout){
+
+   UNUSED_PARAM(dummy1);
+   UNUSED_PARAM(dummy2);
+
    if(dir == LEFT){
       _tween_motor_speed(&l_motor_tween, speed, REV);
       _tween_motor_speed(&r_motor_tween, speed, FWD);

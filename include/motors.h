@@ -29,11 +29,11 @@ typedef enum {
 
 void motors_init();
 
-void motors_set_speed(uint8_t speed, motor_dir_t dir, uint16_t timeout);
+void motors_set_speed(uint8_t speed, motor_dir_t dir, motor_turn_dir_t dummy1, uint16_t dummy2, uint16_t timeout);
 
 void motors_turn_in_arc(uint8_t speed, motor_dir_t dir, motor_turn_dir_t turn_dir, uint16_t radius, uint16_t timeout);
 
-void motors_rotate(uint8_t speed, motor_turn_dir_t dir, uint16_t timeout);
+void motors_rotate(uint8_t speed, motor_dir_t dummy1, motor_turn_dir_t dir, uint16_t dummy2, uint16_t timeout);
 
 void motors_hard_stop();
 
