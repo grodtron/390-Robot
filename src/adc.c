@@ -119,7 +119,6 @@ ISR(ADC_vect){
          // Then we hit the edge!! Panic!! Ahhhhjhh!!
          if(line_sensor_hysteresis_counter == line_sensor_hysteresis_counter_max){
             // But acutally, only panic if we haven't paniced recently
-            motors_hard_stop();
             event_q_add_event(LINE_DETECTED);
          }
 

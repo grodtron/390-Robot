@@ -2,6 +2,7 @@
 
 #include "../include/movement_manager.h"
 #include "../include/motors.h"
+#include "../include/static_assert.h"
 
 
 // this struct is used to hold all the info necessary to make a motor movement
@@ -81,11 +82,14 @@ uint8_t movman_schedule_motor_instruction(
    motor_dir_t      dir,
    motor_turn_dir_t turn_dir,
    uint16_t         param,
-   uint16_t         timeout
+   uint16_t         timeout,
+
+   movement_time_t within_first_n
 ){
 
    uint8_t n;
-   for(n = 0; n < QUEUELEN; ++n){
+   const uint8_t LIM = QUEUELEN < within_first_n ? QUEUELEN : within_first_n;
+   for(n = 0; n < LIM; ++n){
       uint8_t i = (current_move + n) % QUEUELEN;
       if(move_queue[i].reason < reason){
          move_queue[i].reason     = reason;
@@ -100,26 +104,31 @@ uint8_t movman_schedule_motor_instruction(
       }
    }
 
-   switch(n){
-      case QUEUELEN:
-         // If we ended on QUEUELEN, it means we didn't find a viable space
-         // in the queue and we should return 0 indicating that the move
-         // was not scheduled
-         return 0;
-      case 0:
-         // If we ended on a zero, it means we just added something to the
-         // first position in the queue, and it should be executed immediately
-         EXECUTE_CURRENT_MOVE();
-      default:
-         // If we ended on anything but QUEUELEN, we should return n+1
-         return n + 1;
+   if(n == LIM){
+      // If we ended on QUEUELEN, it means we didn't find a viable space
+      // in the queue and we should return 0 indicating that the move
+      // was not scheduled
+      return 0;
    }
+   if(n == 0){
+      // If we ended on a zero, it means we just added something to the
+      // first position in the queue, and it should be executed immediately
+      EXECUTE_CURRENT_MOVE();
+   }
+   // If we ended on anything but LIM, we should return n+1
+   return n + 1;
 
 }
 
 #define DUMMY 0
 
-bool movman_schedule_move(movement_t move, movement_reason_t reason){
+bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_time_t when){
+
+   // We don't want to overflow when incrementing `when`
+   static_assert(QUEUELEN < 128);
+
+   when *= QUEUELEN;
+
    switch(move){
       case FORWARD_THEN_WIDE_TURN_RIGHT:
          return
@@ -129,7 +138,8 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason){
                FWD,
                DUMMY,
                DUMMY,
-               1000)
+               1000,
+               when + 1)
          &&
             movman_schedule_motor_instruction(reason,
                &motors_turn_in_arc,
@@ -137,7 +147,8 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason){
                FWD,
                RIGHT,
                900,
-               1000);
+               1000,
+               when + 2);
       case BACKUP_THEN_TURN_90_CCW:
          return
             movman_schedule_motor_instruction(reason,
@@ -146,7 +157,8 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason){
                REV,
                DUMMY,
                DUMMY,
-               1000)
+               1000,
+               when + 1)
          &&
             movman_schedule_motor_instruction(reason,
                &motors_rotate,
@@ -154,7 +166,8 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason){
                DUMMY,
                LEFT,
                DUMMY,
-               750);  //  TODO - tweak timeout to get true 90
+               750,
+               when + 2);  //  TODO - tweak timeout to get true 90
       case SPIRAL_OUTWARDS:
          return
             movman_schedule_motor_instruction(reason,
@@ -163,7 +176,8 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason){
                FWD,
                LEFT,
                150,
-               500)
+               500,
+               when + 1)
          &&
             movman_schedule_motor_instruction(reason,
                &motors_turn_in_arc,
@@ -171,7 +185,8 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason){
                FWD,
                LEFT,
                300,
-               500)
+               500,
+               when + 2)
          &&
             movman_schedule_motor_instruction(reason,
                &motors_turn_in_arc,
@@ -179,7 +194,8 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason){
                FWD,
                LEFT,
                450,
-               500)
+               500,
+               when + 3)
          &&
             movman_schedule_motor_instruction(reason,
                &motors_turn_in_arc,
@@ -187,7 +203,8 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason){
                FWD,
                LEFT,
                600,
-               500)
+               500,
+               when + 4)
          &&
             movman_schedule_motor_instruction(reason,
                &motors_turn_in_arc,
@@ -195,7 +212,8 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason){
                FWD,
                LEFT,
                750,
-               500)
+               500,
+               when + 5)
          &&
             movman_schedule_motor_instruction(reason,
                &motors_turn_in_arc,
@@ -203,7 +221,8 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason){
                FWD,
                LEFT,
                900,
-               500);
+               500,
+               when + 6);
       default:
          return false;
    }

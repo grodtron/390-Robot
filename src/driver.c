@@ -14,7 +14,7 @@ void handle_movement_complete(){
 
    movman_current_move_completed();
 
-   movman_schedule_move(FORWARD_THEN_WIDE_TURN_RIGHT, TO_SEARCH);
+   movman_schedule_move(FORWARD_THEN_WIDE_TURN_RIGHT, TO_SEARCH, NEXT_AVAILABLE_TIME);
 
 }
 
@@ -23,7 +23,15 @@ void handle_line_detected(){
       case LINE_LEFT:
       case LINE_RIGHT:
       case LINE_BOTH:
-         movman_schedule_move(BACKUP_THEN_TURN_90_CCW, TO_AVOID_EDGE);
+         if(movman_schedule_move(BACKUP_THEN_TURN_90_CCW, TO_AVOID_EDGE, IMMEDIATELY_ELSE_IGNORE)){
+            led_set_red(0);
+            led_set_green(1);
+            led_toggle_yellow();
+         }else{
+            led_set_red(1);
+            led_set_green(0);
+            led_toggle_yellow();
+         }
       case LINE_NONE:
       default:
          break;
@@ -34,15 +42,15 @@ void handle_front_contact(){
    switch(contacts_get_position()){
       case CONTACT_FRONT_LEFT:
          movman_schedule_motor_instruction(TO_AVOID_FIREPIT,
-            &motors_turn_in_arc, 255, FWD, LEFT, 170, 750);
+            &motors_turn_in_arc, 255, FWD, LEFT, 170, 750, IMMEDIATELY_ELSE_IGNORE + 1);
          break;
       case CONTACT_FRONT_RIGHT:
          movman_schedule_motor_instruction(TO_AVOID_FIREPIT,
-            &motors_turn_in_arc, 255, FWD, RIGHT, 170, 750);
+            &motors_turn_in_arc, 255, FWD, RIGHT, 170, 750, IMMEDIATELY_ELSE_IGNORE + 1);
          break;
       case CONTACT_FRONT_LEFT | CONTACT_FRONT_RIGHT:
          movman_schedule_motor_instruction(TO_AVOID_FIREPIT,
-            &motors_set_speed, 255, FWD, 0, 0, 750);
+            &motors_set_speed, 255, FWD, 0, 0, 750, IMMEDIATELY_ELSE_IGNORE + 1);
          break;
       default:
          break;
@@ -63,7 +71,7 @@ int main()
 
    adc_start();
 
-   movman_schedule_move(SPIRAL_OUTWARDS, TO_SEARCH);
+   movman_schedule_move(SPIRAL_OUTWARDS, TO_SEARCH, NEXT_AVAILABLE_TIME);
 
    while(1){
 

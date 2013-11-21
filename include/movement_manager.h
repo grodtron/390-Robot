@@ -20,6 +20,10 @@ typedef enum {
    FORWARD_THEN_WIDE_TURN_RIGHT
 } movement_t;
 
+typedef enum {
+   IMMEDIATELY_ELSE_IGNORE = 0,
+   NEXT_AVAILABLE_TIME     = 1
+} movement_time_t;
 
 void movman_init();
 
@@ -37,10 +41,12 @@ uint8_t movman_schedule_motor_instruction(
    motor_dir_t      dir,
    motor_turn_dir_t turn_dir,
    uint16_t         param,
-   uint16_t         timeout
+   uint16_t         timeout,
+
+   movement_time_t when
 );
 
 
-bool movman_schedule_move(movement_t move, movement_reason_t reason);
+bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_time_t when);
 
 #endif
