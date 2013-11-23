@@ -22,8 +22,8 @@ void adc_init(){
    sensor_channel[LEFT_LINE_SENSOR]  = 1;
    sensor_channel[RIGHT_LINE_SENSOR] = 0;
    // TODO - determine which is which
-   sensor_channel[LEFT_PROX_SENSOR]  = 4;
-   sensor_channel[RIGHT_PROX_SENSOR] = 3;
+   sensor_channel[LEFT_PROX_SENSOR]  = 3;
+   sensor_channel[RIGHT_PROX_SENSOR] = 4;
 
    ADMUX  = (0 << REFS1)  | (0 << REFS0) // External AREF (page 206)
           | (1 << ADLAR)                 // Left adjust the result, we only need 8 bits really
@@ -90,6 +90,11 @@ line_dir_t adc_where_is_line(){
    return val;
 }
 
+void adc_get_prox_readings(uint8_t * left, uint8_t * right){
+   *left  = sensor_readings[LEFT_PROX_SENSOR];
+   *right = sensor_readings[RIGHT_PROX_SENSOR];
+}
+
 
 // The basic idea is that we toggle polling between our two line sensors,
 // as well as keeping track of the elapsed time so that we can also grab
@@ -112,9 +117,14 @@ ISR(ADC_vect){
 
    uint8_t reading = ADCH; // We only read the high 8 bits (see page 208)
 
+   uint8_t old_reading = sensor_readings[current_sensor];
+
+   // Store the reading for retrieval later by the main loop and possibly by us
+   sensor_readings[current_sensor] = reading;
+
    if(CURRENT_SENSOR_IS_LINE_SENSOR()){
 
-      if(reading < LINE_SENSOR_THRESHOLD && sensor_readings[current_sensor] >= LINE_SENSOR_THRESHOLD){
+      if(reading < LINE_SENSOR_THRESHOLD && old_reading >= LINE_SENSOR_THRESHOLD){
 
          // Then we hit the edge!! Panic!! Ahhhhjhh!!
          if(line_sensor_hysteresis_counter == line_sensor_hysteresis_counter_max){
@@ -164,8 +174,6 @@ ISR(ADC_vect){
       }
    }
 
-   // Store the reading for retrieval later by the main loop and possibly by us
-   sensor_readings[current_sensor] = reading;
 
    // Change the channel to the new sensor
    ADMUX  &= ADMUX_MASK;

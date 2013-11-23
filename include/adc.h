@@ -22,5 +22,8 @@ void adc_start();
 
 line_dir_t adc_where_is_line();
 
+void adc_get_prox_readings(uint8_t * left, uint8_t * right);
+
+
 
 #endif

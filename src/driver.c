@@ -13,8 +13,8 @@
 void handle_movement_complete(){
 
    movman_current_move_completed();
+   movman_schedule_move(GO_FORWARD_BRIEFLY, TO_SEARCH, NEXT_AVAILABLE_TIME);
 
-   movman_schedule_move(FORWARD_THEN_WIDE_TURN_RIGHT, TO_SEARCH, NEXT_AVAILABLE_TIME);
 
 }
 
@@ -24,13 +24,7 @@ void handle_line_detected(){
       case LINE_RIGHT:
       case LINE_BOTH:
          if(movman_schedule_move(BACKUP_THEN_TURN_90_CCW, TO_AVOID_EDGE, IMMEDIATELY_ELSE_IGNORE)){
-            led_set_red(0);
-            led_set_green(1);
-            led_toggle_yellow();
          }else{
-            led_set_red(1);
-            led_set_green(0);
-            led_toggle_yellow();
          }
       case LINE_NONE:
       default:
@@ -57,6 +51,27 @@ void handle_front_contact(){
    }
 }
 
+void handle_new_prox_readings(){
+
+   uint8_t left;
+   uint8_t right;
+
+   adc_get_prox_readings(&left, &right);
+
+   if((left >> 5) == (right >> 5)){
+      // It's too close to call...
+      led_set_rgy(1,1,0);
+   }else{
+      if(left > right){
+         led_set_rgy(1,0,0);
+         movman_schedule_move(SMALL_TURN_LEFT, TO_SEEK, IMMEDIATELY_ELSE_IGNORE);
+      }else{
+         led_set_rgy(0,1,0);
+         movman_schedule_move(SMALL_TURN_RIGHT, TO_SEEK, IMMEDIATELY_ELSE_IGNORE);
+      }
+   }
+}
+
 int main()
 {
 
@@ -71,7 +86,7 @@ int main()
 
    adc_start();
 
-   movman_schedule_move(SPIRAL_OUTWARDS, TO_SEARCH, NEXT_AVAILABLE_TIME);
+   movman_schedule_move(GO_FORWARD_BRIEFLY, TO_SEARCH, NEXT_AVAILABLE_TIME);
 
    while(1){
 
@@ -92,6 +107,9 @@ int main()
             break;
          case MOVEMENT_COMPLETE:
             handle_movement_complete();
+            break;
+         case NEW_PROXIMITY_READINGS:
+            handle_new_prox_readings();
             break;
          default:
             break;

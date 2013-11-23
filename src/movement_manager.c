@@ -130,25 +130,6 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
    when *= QUEUELEN;
 
    switch(move){
-      case FORWARD_THEN_WIDE_TURN_RIGHT:
-         return
-            movman_schedule_motor_instruction(reason,
-               &motors_set_speed,
-               255,
-               FWD,
-               DUMMY,
-               DUMMY,
-               1000,
-               when + 1)
-         &&
-            movman_schedule_motor_instruction(reason,
-               &motors_turn_in_arc,
-               255,
-               FWD,
-               RIGHT,
-               900,
-               1000,
-               when + 2);
       case BACKUP_THEN_TURN_90_CCW:
          return
             movman_schedule_motor_instruction(reason,
@@ -168,7 +149,7 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
                DUMMY,
                750,
                when + 2);  //  TODO - tweak timeout to get true 90
-      case SPIRAL_OUTWARDS:
+      case SMALL_TURN_LEFT:
          return
             movman_schedule_motor_instruction(reason,
                &motors_turn_in_arc,
@@ -176,53 +157,28 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
                FWD,
                LEFT,
                150,
-               500,
-               when + 1)
-         &&
+               400,
+               when + 1);
+      case SMALL_TURN_RIGHT:
+         return
             movman_schedule_motor_instruction(reason,
                &motors_turn_in_arc,
                255,
                FWD,
-               LEFT,
-               300,
-               500,
-               when + 2)
-         &&
+               RIGHT,
+               150,
+               400,
+               when + 1);
+      case GO_FORWARD_BRIEFLY:
+         return
             movman_schedule_motor_instruction(reason,
-               &motors_turn_in_arc,
+               &motors_set_speed,
                255,
                FWD,
-               LEFT,
-               450,
-               500,
-               when + 3)
-         &&
-            movman_schedule_motor_instruction(reason,
-               &motors_turn_in_arc,
-               255,
-               FWD,
-               LEFT,
-               600,
-               500,
-               when + 4)
-         &&
-            movman_schedule_motor_instruction(reason,
-               &motors_turn_in_arc,
-               255,
-               FWD,
-               LEFT,
-               750,
-               500,
-               when + 5)
-         &&
-            movman_schedule_motor_instruction(reason,
-               &motors_turn_in_arc,
-               255,
-               FWD,
-               LEFT,
-               900,
-               500,
-               when + 6);
+               DUMMY,
+               DUMMY,
+               250,
+               when + 1);
       default:
          return false;
    }

@@ -10,13 +10,16 @@ typedef enum {
    TO_AVOID_FIREPIT  = 200,
    TO_ATTACK         = 150,
    TO_DEFEND         = 100,
+   TO_SEEK           = 75,
    TO_SEARCH         = 50,
    NO_REASON         = 0
 } movement_reason_t;
 
 typedef enum {
    BACKUP_THEN_TURN_90_CCW,
-   SPIRAL_OUTWARDS,
+   GO_FORWARD_BRIEFLY,
+   SMALL_TURN_LEFT,
+   SMALL_TURN_RIGHT,
    FORWARD_THEN_WIDE_TURN_RIGHT
 } movement_t;
 
