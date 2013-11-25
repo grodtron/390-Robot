@@ -13,7 +13,7 @@
 void handle_movement_complete(){
 
    movman_current_move_completed();
-   movman_schedule_move(GO_FORWARD_BRIEFLY, TO_SEARCH, NEXT_AVAILABLE_TIME);
+   movman_schedule_move(FORWARD_THEN_ROTATE_360_CCW, TO_SEARCH, NEXT_AVAILABLE_TIME);
 
 
 }
@@ -33,21 +33,29 @@ void handle_line_detected(){
 }
 
 void handle_front_contact(){
-   switch(contacts_get_position()){
-      case CONTACT_FRONT_LEFT:
-         movman_schedule_motor_instruction(TO_AVOID_FIREPIT,
-            &motors_turn_in_arc, 255, FWD, LEFT, 170, 750, IMMEDIATELY_ELSE_IGNORE + 1);
-         break;
-      case CONTACT_FRONT_RIGHT:
-         movman_schedule_motor_instruction(TO_AVOID_FIREPIT,
-            &motors_turn_in_arc, 255, FWD, RIGHT, 170, 750, IMMEDIATELY_ELSE_IGNORE + 1);
-         break;
-      case CONTACT_FRONT_LEFT | CONTACT_FRONT_RIGHT:
-         movman_schedule_motor_instruction(TO_AVOID_FIREPIT,
-            &motors_set_speed, 255, FWD, 0, 0, 750, IMMEDIATELY_ELSE_IGNORE + 1);
-         break;
-      default:
-         break;
+   uint8_t left;
+   uint8_t right;
+
+   adc_get_prox_readings(&left, &right);
+
+   // Then we're contacting our opponent
+   if(left > 70 || right > 70){
+      switch(contacts_get_position()){
+         case CONTACT_FRONT_LEFT:
+            movman_schedule_move(SMALL_TURN_LEFT, TO_ATTACK, IMMEDIATELY_ELSE_IGNORE);
+            break;
+         case CONTACT_FRONT_RIGHT:
+            movman_schedule_move(SMALL_TURN_RIGHT, TO_ATTACK, IMMEDIATELY_ELSE_IGNORE);
+            break;
+         case CONTACT_FRONT_LEFT | CONTACT_FRONT_RIGHT:
+            movman_schedule_move(GO_FORWARD_BRIEFLY, TO_ATTACK, IMMEDIATELY_ELSE_IGNORE);
+            break;
+         default:
+            break;
+      }
+   }else{
+      movman_schedule_move(BACKUP_THEN_TURN_90_CCW, TO_AVOID_EDGE, IMMEDIATELY_ELSE_IGNORE);
+      // we're contacting the firepit
    }
 }
 
@@ -88,7 +96,11 @@ int main()
 
    adc_start();
 
-   movman_schedule_move(GO_FORWARD_BRIEFLY, TO_SEARCH, NEXT_AVAILABLE_TIME);
+   led_toggle_yellow();
+   movman_schedule_move(
+      WAIT_5_SECONDS_THEN_FULL_FORWARD_FOR_A_LONG_TIME,
+      TO_MEET_STARTUP_REQUIREMENT,
+      NEXT_AVAILABLE_TIME);
 
    while(1){
 

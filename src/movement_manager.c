@@ -1,4 +1,5 @@
 #include <inttypes.h>
+#include <limits.h>
 
 #include "../include/movement_manager.h"
 #include "../include/motors.h"
@@ -130,6 +131,44 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
    when *= QUEUELEN;
 
    switch(move){
+      case WAIT_5_SECONDS_THEN_FULL_FORWARD_FOR_A_LONG_TIME:
+         return
+            movman_schedule_motor_instruction(reason,
+               &motors_set_speed,
+               0,
+               FWD,
+               DUMMY,
+               DUMMY,
+               4875, // This is a true 5 seconds, since our milliseconds are not really milliseconds
+               when + 1)
+         &&
+            movman_schedule_motor_instruction(reason,
+               &motors_set_speed,
+               255,
+               FWD,
+               DUMMY,
+               DUMMY,
+               UINT16_MAX,
+               when + 2);
+      case FORWARD_THEN_ROTATE_360_CCW:
+         return
+            movman_schedule_motor_instruction(reason,
+               &motors_set_speed,
+               255,
+               FWD,
+               DUMMY,
+               DUMMY,
+               1000,
+               when + 1)
+         &&
+            movman_schedule_motor_instruction(reason,
+               &motors_rotate,
+               255,
+               DUMMY,
+               LEFT,
+               DUMMY,
+               4500, // TODO - tweak to get true 360
+               when + 2);
       case BACKUP_THEN_TURN_90_CCW:
          return
             movman_schedule_motor_instruction(reason,
@@ -147,7 +186,7 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
                DUMMY,
                LEFT,
                DUMMY,
-               750,
+               1250,
                when + 2);  //  TODO - tweak timeout to get true 90
       case SMALL_TURN_LEFT:
          return
