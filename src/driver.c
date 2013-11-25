@@ -58,15 +58,17 @@ void handle_new_prox_readings(){
 
    adc_get_prox_readings(&left, &right);
 
+   uint8_t yellow = left > 70 || right > 70;
+
    if((left >> 5) == (right >> 5)){
       // It's too close to call...
-      led_set_rgy(1,1,0);
+      led_set_rgy(1,1,yellow);
    }else{
       if(left > right){
-         led_set_rgy(1,0,0);
+         led_set_rgy(1,0,yellow);
          movman_schedule_move(SMALL_TURN_LEFT, TO_SEEK, IMMEDIATELY_ELSE_IGNORE);
       }else{
-         led_set_rgy(0,1,0);
+         led_set_rgy(0,1,yellow);
          movman_schedule_move(SMALL_TURN_RIGHT, TO_SEEK, IMMEDIATELY_ELSE_IGNORE);
       }
    }
