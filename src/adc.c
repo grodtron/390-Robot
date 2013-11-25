@@ -16,6 +16,12 @@ static uint8_t sensor_readings[4] = {0,0,0,0};
 
 static uint8_t LINE_SENSOR_THRESHOLD = 128;
 
+static const uint8_t LEFT_LINE_UPPER_THRESH = 178;
+static const uint8_t LEFT_LINE_LOWER_THRESH = 76;
+
+static const uint8_t RIGHT_LINE_UPPER_THRESH = 158;
+static const uint8_t RIGHT_LINE_LOWER_THRESH = 66;
+
 static const uint8_t ADMUX_MASK = ~((1 << MUX0) | (1 << MUX1) | (1 << MUX2) | (1 << MUX3));
 
 void adc_init(){
@@ -116,15 +122,26 @@ ISR(ADC_vect){
    static uint8_t  line_sensor_hysteresis_counter     = 0;
 
    uint8_t reading = ADCH; // We only read the high 8 bits (see page 208)
-
-   uint8_t old_reading = sensor_readings[current_sensor];
+   uint8_t prev_reading = sensor_readings[current_sensor];
 
    // Store the reading for retrieval later by the main loop and possibly by us
    sensor_readings[current_sensor] = reading;
 
    if(CURRENT_SENSOR_IS_LINE_SENSOR()){
 
-      if(reading < LINE_SENSOR_THRESHOLD && old_reading >= LINE_SENSOR_THRESHOLD){
+      uint8_t LOWER_THRESH;
+      uint8_t UPPER_THRESH;
+
+      if(current_sensor == LEFT_LINE_SENSOR){
+         LOWER_THRESH = LEFT_LINE_LOWER_THRESH;
+         UPPER_THRESH = LEFT_LINE_UPPER_THRESH;
+      }else{
+         LOWER_THRESH = RIGHT_LINE_LOWER_THRESH;
+         UPPER_THRESH = RIGHT_LINE_UPPER_THRESH;
+      }
+
+      if(   (reading      < LOWER_THRESH || reading      > UPPER_THRESH)
+         && (prev_reading > LOWER_THRESH || prev_reading < UPPER_THRESH)){
 
          // Then we hit the edge!! Panic!! Ahhhhjhh!!
          if(line_sensor_hysteresis_counter == line_sensor_hysteresis_counter_max){
