@@ -13,7 +13,7 @@
 void handle_movement_complete(){
 
    movman_current_move_completed();
-   movman_schedule_move(FORWARD_THEN_ROTATE_360_CCW, TO_SEARCH, NEXT_AVAILABLE_TIME);
+   movman_schedule_move(MOVE_FORWARD, TO_SEARCH, NEXT_AVAILABLE_TIME);
 
 
 }

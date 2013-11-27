@@ -150,7 +150,7 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
                DUMMY,
                UINT16_MAX,
                when + 2);
-      case FORWARD_THEN_ROTATE_360_CCW:
+      case MOVE_FORWARD:
          return
             movman_schedule_motor_instruction(reason,
                &motors_set_speed,
@@ -159,16 +159,7 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
                DUMMY,
                DUMMY,
                1000,
-               when + 1)
-         &&
-            movman_schedule_motor_instruction(reason,
-               &motors_rotate,
-               255,
-               DUMMY,
-               LEFT,
-               DUMMY,
-               4500, // TODO - tweak to get true 360
-               when + 2);
+               when + 1);
       case BACKUP_THEN_TURN_90_CCW:
          return
             movman_schedule_motor_instruction(reason,

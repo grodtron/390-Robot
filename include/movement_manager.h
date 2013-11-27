@@ -23,7 +23,7 @@ typedef enum {
    SMALL_TURN_LEFT,
    SMALL_TURN_RIGHT,
    FORWARD_THEN_WIDE_TURN_RIGHT,
-   FORWARD_THEN_ROTATE_360_CCW
+   MOVE_FORWARD
 } movement_t;
 
 typedef enum {
