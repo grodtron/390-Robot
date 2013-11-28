@@ -2,7 +2,24 @@
 #include <limits.h>
 
 #include "../include/movement_manager.h"
+#ifdef __AVR__
 #include "../include/motors.h"
+#else
+
+#include <stdio.h>
+
+void motors_init(){}
+
+void motors_set_speed(uint8_t speed, motor_dir_t dir, motor_turn_dir_t dummy1, uint16_t dummy2, uint16_t timeout){}
+
+void motors_turn_in_arc(uint8_t speed, motor_dir_t dir, motor_turn_dir_t turn_dir, uint16_t radius, uint16_t timeout){}
+
+void motors_rotate(uint8_t speed, motor_dir_t dummy1, motor_turn_dir_t dir, uint16_t dummy2, uint16_t timeout){}
+
+void motors_hard_stop(){}
+
+bool motors_movement_in_progress(){}
+#endif
 #include "../include/static_assert.h"
 
 
@@ -27,6 +44,7 @@ static pending_movement_t move_queue[QUEUELEN];
 
 static uint8_t current_move;
 
+#ifdef __AVR__
 #define EXECUTE_CURRENT_MOVE()        \
 move_queue[current_move].move_funct(  \
    move_queue[current_move].speed,    \
@@ -35,6 +53,15 @@ move_queue[current_move].move_funct(  \
    move_queue[current_move].param,    \
    move_queue[current_move].timeout   \
 )
+#else
+#define EXECUTE_CURRENT_MOVE() printf("Executing move %s(%d, %s, %s, %d) with priority %d\n",           \
+     move_queue[current_move].move_funct == &motors_set_speed ? "motors_set_speed" : "motors_rotate", \
+     move_queue[current_move].speed,    \
+     move_queue[current_move].dir == FWD ? "FWD" : "REV", \
+     move_queue[current_move].turn_dir == LEFT ? "LEFT" : "RIGHT", \
+     move_queue[current_move].timeout, \
+     move_queue[current_move].reason)
+#endif
 
 void movman_init(){
    for(uint8_t i = 0; i < QUEUELEN; ++i){
@@ -45,6 +72,7 @@ void movman_init(){
 
 void movman_current_move_completed(){
 
+   #ifdef __AVR__
    if(motors_movement_in_progress()){
       // Bullshit, the move's not complete at all!
       //
@@ -54,6 +82,7 @@ void movman_current_move_completed(){
       // high-priority moves
       return;
    }
+   #endif
 
    move_queue[current_move].reason = NO_REASON;
 
@@ -68,6 +97,8 @@ void movman_current_move_completed(){
 
       // This move did have a reason, so we execute it
       EXECUTE_CURRENT_MOVE();
+   }else{
+      movman_init();
    }
 }
 
@@ -130,6 +161,12 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
 
    when *= QUEUELEN;
 
+   if(move_queue[current_move].reason < reason){
+      movman_init();
+   }else{
+      return false;
+   }
+
    switch(move){
       case WAIT_5_SECONDS_THEN_FULL_FORWARD_FOR_A_LONG_TIME:
          return
@@ -160,6 +197,36 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
                DUMMY,
                1000,
                when + 1);
+
+      case SEARCH_PATTERN:
+         return
+            movman_schedule_motor_instruction(reason,
+               &motors_rotate,
+               255,
+               DUMMY,
+               LEFT,
+               DUMMY,
+               1400,
+               when + 1)
+         &&
+            movman_schedule_motor_instruction(reason,
+               &motors_rotate,
+               255,
+               DUMMY,
+               RIGHT,
+               DUMMY,
+               700,
+               when + 2)
+         &&
+            movman_schedule_motor_instruction(reason,
+               &motors_set_speed,
+               255,
+               FWD,
+               DUMMY,
+               DUMMY,
+               3000,
+               when + 3);
+
       case BACKUP_THEN_TURN_90_CCW:
          return
             movman_schedule_motor_instruction(reason,
@@ -177,8 +244,17 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
                DUMMY,
                LEFT,
                DUMMY,
-               1250,
-               when + 2);  //  TODO - tweak timeout to get true 90
+               1400,
+               when + 2)
+         &&
+            movman_schedule_motor_instruction(reason,
+               &motors_set_speed,
+               255,
+               FWD,
+               DUMMY,
+               DUMMY,
+               750,
+               when + 3);
       case SMALL_TURN_LEFT:
          return
             movman_schedule_motor_instruction(reason,
@@ -213,3 +289,45 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
          return false;
    }
 }
+
+#ifndef __AVR__
+
+
+#define PRINT_MOVE(i) printf("%s %s(%d, %s, %s, %d) with priority %d\n",           \
+     i == current_move ? "--> " : "    ", \
+     move_queue[i].move_funct == &motors_set_speed ? "motors_set_speed" : "motors_rotate", \
+     move_queue[i].speed,    \
+     move_queue[i].dir == FWD ? "FWD" : "REV", \
+     move_queue[i].turn_dir == LEFT ? "LEFT" : "RIGHT", \
+     move_queue[i].timeout, \
+     move_queue[i].reason) \
+
+#define STEP() do{                  \
+   for(uint8_t i = 0; i < QUEUELEN; ++i){ \
+      PRINT_MOVE(i); \
+   } \
+   movman_current_move_completed(); \
+   movman_schedule_move(SEARCH_PATTERN, TO_SEARCH, NEXT_AVAILABLE_TIME); \
+}while(0);
+
+
+
+int main(int argc, const char *argv[])
+{
+
+   movman_schedule_move(SEARCH_PATTERN, TO_SEARCH, NEXT_AVAILABLE_TIME);
+
+   STEP();
+   STEP();
+
+   movman_schedule_move(BACKUP_THEN_TURN_90_CCW, TO_AVOID_EDGE, IMMEDIATELY_ELSE_IGNORE);
+
+   for(uint8_t i = 0; i < 32; ++i){
+      STEP();
+   }
+
+
+   return 0;
+}
+
+#endif

@@ -13,7 +13,9 @@
 void handle_movement_complete(){
 
    movman_current_move_completed();
-   movman_schedule_move(MOVE_FORWARD, TO_SEARCH, NEXT_AVAILABLE_TIME);
+   movman_schedule_move(SEARCH_PATTERN, TO_SEARCH, NEXT_AVAILABLE_TIME);
+
+   led_toggle_green();
 
 
 }
@@ -35,6 +37,7 @@ void handle_line_detected(){
 void handle_front_contact(){
    uint8_t left;
    uint8_t right;
+
 
    adc_get_prox_readings(&left, &right);
 
@@ -97,10 +100,11 @@ int main()
    adc_start();
 
    led_toggle_yellow();
-   movman_schedule_move(
-      WAIT_5_SECONDS_THEN_FULL_FORWARD_FOR_A_LONG_TIME,
-      TO_MEET_STARTUP_REQUIREMENT,
-      NEXT_AVAILABLE_TIME);
+   //movman_schedule_move(
+   //   WAIT_5_SECONDS_THEN_FULL_FORWARD_FOR_A_LONG_TIME,
+   //   TO_MEET_STARTUP_REQUIREMENT,
+   //   NEXT_AVAILABLE_TIME);
+   movman_schedule_move(SEARCH_PATTERN, TO_SEARCH, NEXT_AVAILABLE_TIME);
 
    while(1){
 
@@ -111,6 +115,7 @@ int main()
       switch(e){
 
          case LINE_DETECTED:
+            led_toggle_red();
             handle_line_detected();
             break;
          case CONTACT_DETECTED_BOTH:
@@ -123,7 +128,7 @@ int main()
             handle_movement_complete();
             break;
          case NEW_PROXIMITY_READINGS:
-            handle_new_prox_readings();
+            //handle_new_prox_readings();
             break;
          default:
             break;
