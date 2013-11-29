@@ -191,9 +191,9 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
       DEFINE_MOVE(
       SEARCH_PATTERN,
          3,
-         MOVE_STRAIGHT(FWD, 3000)
-         ROTATE(LEFT, 1400)
-         ROTATE(RIGHT, 700)
+         MOVE_STRAIGHT(FWD, 1500)
+         ROTATE(LEFT, 900)
+         ROTATE(RIGHT, 600)
       )
 
       DEFINE_MOVE(
