@@ -6,6 +6,11 @@
 #include "../include/motors.h"
 
 typedef enum {
+   IMMEDIATELY_ELSE_IGNORE,
+   NEXT_AVAILABLE_TIME
+} movement_time_t;
+
+typedef enum {
    TO_AVOID_EDGE     = 255,
    TO_MEET_STARTUP_REQUIREMENT = 220,
    TO_AVOID_FIREPIT  = 200,
@@ -31,6 +36,6 @@ void movman_init();
 
 void movman_current_move_completed();
 
-bool movman_schedule_move(movement_t move, movement_reason_t reason);
+bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_time_t);
 
 #endif

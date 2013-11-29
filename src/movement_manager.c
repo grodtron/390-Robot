@@ -27,6 +27,8 @@ bool motors_movement_in_progress(){ return false; }
 // command
 typedef struct {
 
+   movement_reason_t reason;
+
    void (*move_funct)(uint8_t, motor_dir_t, motor_turn_dir_t, uint16_t, uint16_t);
    uint8_t          speed;
    motor_dir_t      dir;
@@ -102,7 +104,66 @@ void movman_current_move_completed(){
 }
 
 
-bool movman_schedule_move(movement_t move, movement_reason_t reason){
+// Return the offset from the current position where `length` moves with priority
+// `reason` can be scheduled. Returns -1 if they cannot be scheduled.
+int8_t next_available_index( uint8_t length, movement_reason_t reason ){
+   int8_t i;
+   for(i = 0; i < QUEUELEN; ++i){
+      if(move_queue[(current_move + i) % QUEUELEN].reason < reason){
+         break;
+      }
+   }
+
+   if(QUEUELEN - i >= length){
+      return i;
+   }else{
+      return -1;
+   }
+
+}
+
+
+bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_time_t when){
+
+   #define DEFINE_MOVE(NAME, n_moves, DO_SCHEDULE_MOVES) \
+         case NAME: \
+         i = next_available_index(n_moves, reason); \
+         if(i == -1 || (when == IMMEDIATELY_ELSE_IGNORE && i != 0)){ \
+            break; \
+         } \
+         i = (current_move + i) % QUEUELEN; \
+         DO_SCHEDULE_MOVES \
+         break;
+
+   #define PAUSE(TIMEOUT) \
+         move_queue[i].move_funct = &motors_set_speed; \
+         move_queue[i].speed      = 0; \
+         move_queue[i].timeout    = TIMEOUT; \
+         i = (i + 1) % QUEUELEN;
+
+   #define MOVE_STRAIGHT(DIRECTION, TIMEOUT) \
+         move_queue[i].move_funct = &motors_set_speed; \
+         move_queue[i].speed      = 255;        \
+         move_queue[i].dir        = DIRECTION;        \
+         move_queue[i].timeout    = TIMEOUT; \
+         i = (i + 1) % QUEUELEN;
+
+   #define ROTATE(DIRECTION, TIMEOUT) \
+         move_queue[i].move_funct = &motors_rotate; \
+         move_queue[i].speed      = 255; \
+         move_queue[i].turn_dir   = DIRECTION; \
+         move_queue[i].timeout    = TIMEOUT; \
+         i = (i + 1) % QUEUELEN;
+
+   #define TURN(DIRECTION, TURN_DIRECTION, TIMEOUT) \
+         move_queue[i].move_funct = &motors_turn_in_arc; \
+         move_queue[i].speed      = 255; \
+         move_queue[i].dir        = DIRECTION; \
+         move_queue[i].turn_dir   = TURN_DIRECTION; \
+         move_queue[i].param      = 150; /*radius*/  \
+         move_queue[i].timeout    = TIMEOUT; \
+         i = (i + 1) % QUEUELEN;
+
 
    if(current_move_reason >= reason){
       return false;  // we're doing something more important
@@ -111,96 +172,47 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason){
    current_move_reason = reason;
    current_move        = 0;
 
+   int8_t i;
+
    switch(move){
-      case WAIT_5_SECONDS_THEN_FULL_FORWARD_FOR_A_LONG_TIME:
 
-         move_queue[0].move_funct = &motors_set_speed;
-         move_queue[0].speed      = 0;
-         move_queue[0].timeout    = 4875; // This is a true 5 seconds, since our milliseconds are not really milliseconds
 
-         move_queue[1].move_funct = &motors_set_speed;
-         move_queue[1].speed      = 255;
-         move_queue[1].dir        = FWD;
-         move_queue[1].timeout    = UINT16_MAX; // Go for as long as we are capable of keepint track
+      DEFINE_MOVE(
+      WAIT_5_SECONDS_THEN_FULL_FORWARD_FOR_A_LONG_TIME,
+         2,
+         PAUSE(4875)
+         MOVE_STRAIGHT(FWD, UINT16_MAX))
 
-         move_queue[2].move_funct = NULL;
+      DEFINE_MOVE(
+      MOVE_FORWARD,
+         1,
+         MOVE_STRAIGHT(FWD, 1000))
 
-         break;
 
-      case MOVE_FORWARD:
+      DEFINE_MOVE(
+      SEARCH_PATTERN,
+         3,
+         ROTATE(LEFT, 1400)
+         ROTATE(RIGHT, 700)
+         MOVE_STRAIGHT(FWD, 3000))
 
-         move_queue[0].move_funct = &motors_set_speed;
-         move_queue[0].speed      = 255;
-         move_queue[0].dir        = FWD;
-         move_queue[0].timeout    = 1000;
+      DEFINE_MOVE(
+      BACKUP_THEN_TURN_90_CCW,
+         3,
+         MOVE_STRAIGHT(REV, 1000)
+         ROTATE(LEFT, 1400)
+         MOVE_STRAIGHT(FWD, 1500))
 
-         move_queue[1].move_funct = NULL;
+      DEFINE_MOVE(
+      SMALL_TURN_LEFT,
+         1,
+         TURN(FWD, LEFT, 400))
 
-         break;
+      DEFINE_MOVE(
+      SMALL_TURN_RIGHT,
+         1,
+         TURN(FWD, RIGHT, 400))
 
-      case SEARCH_PATTERN:
-         move_queue[0].move_funct = &motors_rotate;
-         move_queue[0].speed      = 255;
-         move_queue[0].turn_dir   = LEFT;
-         move_queue[0].timeout    = 1400;
-
-         move_queue[1].move_funct = &motors_rotate;
-         move_queue[1].speed      = 255;
-         move_queue[1].turn_dir   = RIGHT;
-         move_queue[1].timeout    = 700;
-
-         move_queue[2].move_funct = &motors_set_speed;
-         move_queue[2].speed      = 255;
-         move_queue[2].dir        = FWD;
-         move_queue[2].timeout    = 3000;
-
-         move_queue[3].move_funct = NULL;
-
-         break;
-
-      case BACKUP_THEN_TURN_90_CCW:
-         move_queue[0].move_funct = &motors_set_speed;
-         move_queue[0].speed      = 255;
-         move_queue[0].dir        = REV;
-         move_queue[0].timeout    = 1000;
-
-         move_queue[1].move_funct = &motors_rotate;
-         move_queue[1].speed      = 255;
-         move_queue[1].turn_dir   = LEFT;
-         move_queue[1].timeout    = 1400;
-
-         move_queue[2].move_funct = &motors_set_speed;
-         move_queue[2].speed      = 255;
-         move_queue[2].dir        = FWD;
-         move_queue[2].timeout    = 1500;
-
-         move_queue[3].move_funct = NULL;
-
-         break;
-
-      case SMALL_TURN_LEFT:
-         move_queue[0].move_funct = &motors_turn_in_arc;
-         move_queue[0].speed      = 255;
-         move_queue[0].dir        = FWD;
-         move_queue[0].turn_dir   = LEFT;
-         move_queue[0].param      = 150; // radius of the turn
-         move_queue[0].timeout    = 400;
-
-         move_queue[1].move_funct = NULL;
-
-         break;
-
-      case SMALL_TURN_RIGHT:
-         move_queue[0].move_funct = &motors_turn_in_arc;
-         move_queue[0].speed      = 255;
-         move_queue[0].dir        = FWD;
-         move_queue[0].turn_dir   = RIGHT;
-         move_queue[0].param      = 150; // radius of the turn
-         move_queue[0].timeout    = 400;
-
-         move_queue[1].move_funct = NULL;
-
-         break;
 
       default:
          move_queue[0].move_funct = NULL;

@@ -13,7 +13,7 @@
 void handle_movement_complete(){
 
    movman_current_move_completed();
-   movman_schedule_move(SEARCH_PATTERN, TO_SEARCH);
+   movman_schedule_move(SEARCH_PATTERN, TO_SEARCH, NEXT_AVAILABLE_TIME);
 
    led_toggle_green();
 
@@ -25,7 +25,7 @@ void handle_line_detected(){
       case LINE_LEFT:
       case LINE_RIGHT:
       case LINE_BOTH:
-         if(movman_schedule_move(BACKUP_THEN_TURN_90_CCW, TO_AVOID_EDGE)){
+         if(movman_schedule_move(BACKUP_THEN_TURN_90_CCW, TO_AVOID_EDGE, IMMEDIATELY_ELSE_IGNORE)){
          }else{
          }
       case LINE_NONE:
@@ -45,19 +45,19 @@ void handle_front_contact(){
    if(left > 70 || right > 70){
       switch(contacts_get_position()){
          case CONTACT_FRONT_LEFT:
-            movman_schedule_move(SMALL_TURN_LEFT, TO_ATTACK);
+            movman_schedule_move(SMALL_TURN_LEFT, TO_ATTACK, IMMEDIATELY_ELSE_IGNORE);
             break;
          case CONTACT_FRONT_RIGHT:
-            movman_schedule_move(SMALL_TURN_RIGHT, TO_ATTACK);
+            movman_schedule_move(SMALL_TURN_RIGHT, TO_ATTACK, IMMEDIATELY_ELSE_IGNORE);
             break;
          case CONTACT_FRONT_LEFT | CONTACT_FRONT_RIGHT:
-            movman_schedule_move(GO_FORWARD_BRIEFLY, TO_ATTACK);
+            movman_schedule_move(GO_FORWARD_BRIEFLY, TO_ATTACK, IMMEDIATELY_ELSE_IGNORE);
             break;
          default:
             break;
       }
    }else{
-      movman_schedule_move(BACKUP_THEN_TURN_90_CCW, TO_AVOID_EDGE);
+      movman_schedule_move(BACKUP_THEN_TURN_90_CCW, TO_AVOID_EDGE, IMMEDIATELY_ELSE_IGNORE);
       // we're contacting the firepit
    }
 }
@@ -77,10 +77,10 @@ void handle_new_prox_readings(){
    }else{
       if(left > right){
          led_set_rgy(1,0,yellow);
-         movman_schedule_move(SMALL_TURN_LEFT, TO_SEEK);
+         movman_schedule_move(SMALL_TURN_LEFT, TO_SEEK, IMMEDIATELY_ELSE_IGNORE);
       }else{
          led_set_rgy(0,1,yellow);
-         movman_schedule_move(SMALL_TURN_RIGHT, TO_SEEK);
+         movman_schedule_move(SMALL_TURN_RIGHT, TO_SEEK, IMMEDIATELY_ELSE_IGNORE);
       }
    }
 }
@@ -100,11 +100,10 @@ int main()
    adc_start();
 
    led_toggle_yellow();
-   //movman_schedule_move(
-   //   WAIT_5_SECONDS_THEN_FULL_FORWARD_FOR_A_LONG_TIME,
-   //   TO_MEET_STARTUP_REQUIREMENT,
-   //   NEXT_AVAILABLE_TIME);
-   movman_schedule_move(SEARCH_PATTERN, TO_SEARCH);
+   movman_schedule_move(
+      WAIT_5_SECONDS_THEN_FULL_FORWARD_FOR_A_LONG_TIME,
+      TO_MEET_STARTUP_REQUIREMENT,
+      NEXT_AVAILABLE_TIME);
 
    while(1){
 
