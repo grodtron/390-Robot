@@ -10,12 +10,13 @@
 #include "../include/event_queue.h"
 #include "../include/contacts.h"
 
+void handle_new_prox_readings();
 void handle_movement_complete(){
 
    movman_current_move_completed();
+   handle_new_prox_readings(); // TODO - wanring, bad hack alert!!
    movman_schedule_move(SEARCH_PATTERN, TO_SEARCH, NEXT_AVAILABLE_TIME);
 
-   led_toggle_green();
 
 
 }
@@ -25,7 +26,7 @@ void handle_line_detected(){
       case LINE_LEFT:
       case LINE_RIGHT:
       case LINE_BOTH:
-         if(movman_schedule_move(BACKUP_THEN_TURN_90_CCW, TO_AVOID_EDGE, IMMEDIATELY_ELSE_IGNORE)){
+         if(movman_schedule_move(BACKUP_THEN_TURN_90_CCW, TO_AVOID_EDGE, IMMEDIATELY)){
          }else{
          }
       case LINE_NONE:
@@ -45,19 +46,19 @@ void handle_front_contact(){
    if(left > 70 || right > 70){
       switch(contacts_get_position()){
          case CONTACT_FRONT_LEFT:
-            movman_schedule_move(SMALL_TURN_LEFT, TO_ATTACK, IMMEDIATELY_ELSE_IGNORE);
+            movman_schedule_move(SMALL_TURN_LEFT, TO_ATTACK, IMMEDIATELY);
             break;
          case CONTACT_FRONT_RIGHT:
-            movman_schedule_move(SMALL_TURN_RIGHT, TO_ATTACK, IMMEDIATELY_ELSE_IGNORE);
+            movman_schedule_move(SMALL_TURN_RIGHT, TO_ATTACK, IMMEDIATELY);
             break;
          case CONTACT_FRONT_LEFT | CONTACT_FRONT_RIGHT:
-            movman_schedule_move(GO_FORWARD_BRIEFLY, TO_ATTACK, IMMEDIATELY_ELSE_IGNORE);
+            movman_schedule_move(GO_FORWARD_BRIEFLY, TO_ATTACK, IMMEDIATELY);
             break;
          default:
             break;
       }
    }else{
-      movman_schedule_move(BACKUP_THEN_TURN_90_CCW, TO_AVOID_EDGE, IMMEDIATELY_ELSE_IGNORE);
+      movman_schedule_move(BACKUP_THEN_TURN_90_CCW, TO_AVOID_EDGE, IMMEDIATELY);
       // we're contacting the firepit
    }
 }
@@ -73,14 +74,19 @@ void handle_new_prox_readings(){
 
    if((left >> 5) == (right >> 5)){
       // It's too close to call...
-      led_set_rgy(1,1,yellow);
+      if( left > 50 && right > 50 ){
+         led_set_rgy(1,1,yellow);
+         movman_schedule_move(SMALL_MOVE_FORWARD, TO_SEEK, IMMEDIATELY_WITH_OVERWRITE);
+      }else{
+         led_set_rgy(0,0,yellow);
+      }
    }else{
       if(left > right){
          led_set_rgy(1,0,yellow);
-         movman_schedule_move(SMALL_TURN_LEFT, TO_SEEK, IMMEDIATELY_ELSE_IGNORE);
+         movman_schedule_move(SMALL_TURN_LEFT, TO_SEEK, IMMEDIATELY_WITH_OVERWRITE);
       }else{
          led_set_rgy(0,1,yellow);
-         movman_schedule_move(SMALL_TURN_RIGHT, TO_SEEK, IMMEDIATELY_ELSE_IGNORE);
+         movman_schedule_move(SMALL_TURN_RIGHT, TO_SEEK, IMMEDIATELY_WITH_OVERWRITE);
       }
    }
 }
@@ -99,11 +105,10 @@ int main()
 
    adc_start();
 
-   led_toggle_yellow();
    movman_schedule_move(
       WAIT_5_SECONDS_THEN_FULL_FORWARD_FOR_A_LONG_TIME,
       TO_MEET_STARTUP_REQUIREMENT,
-      NEXT_AVAILABLE_TIME);
+      IMMEDIATELY);
 
    while(1){
 
@@ -114,7 +119,6 @@ int main()
       switch(e){
 
          case LINE_DETECTED:
-            led_toggle_red();
             handle_line_detected();
             break;
          case CONTACT_DETECTED_BOTH:
@@ -127,7 +131,7 @@ int main()
             handle_movement_complete();
             break;
          case NEW_PROXIMITY_READINGS:
-            //handle_new_prox_readings();
+            handle_new_prox_readings();
             break;
          default:
             break;

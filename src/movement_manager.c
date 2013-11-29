@@ -42,7 +42,6 @@ typedef struct {
 #define QUEUELEN 8
 static pending_movement_t move_queue[QUEUELEN];
 static uint8_t            current_move;
-movement_reason_t         current_move_reason;
 
 #ifdef __AVR__
 // This macro actually executes the movement
@@ -66,11 +65,11 @@ move_queue[current_move].move_funct(  \
 
 // Clears the queue
 void movman_init(){
-   // TODO - do we really need to reset all these things all the time just
-   // to show one condition
+   int8_t i;
+   for(i = 0; i < QUEUELEN; ++i){
+      move_queue[i].reason = NO_REASON;
+   }
    current_move = 0;
-   current_move_reason = NO_REASON;
-   move_queue[0].move_funct = NULL;
 }
 
 void movman_current_move_completed(){
@@ -91,14 +90,12 @@ void movman_current_move_completed(){
    // Go to the next index
    //
    // NB - MUST set up moves properly, no range check is done
-   ++current_move;
+   move_queue[current_move].reason = NO_REASON;
+   current_move = (current_move + 1) % QUEUELEN;
 
-   if(move_queue[current_move].move_funct){
+   if(move_queue[current_move].reason != NO_REASON){
       // If there is another move to be executed, then we execute it
       EXECUTE_CURRENT_MOVE();
-   }else{
-      // If we reached the last move in the queue we reset the queue
-      movman_init();
    }
    // TODO - empty queue event?
 }
@@ -106,10 +103,11 @@ void movman_current_move_completed(){
 
 // Return the offset from the current position where `length` moves with priority
 // `reason` can be scheduled. Returns -1 if they cannot be scheduled.
-int8_t next_available_index( uint8_t length, movement_reason_t reason ){
+int8_t next_available_index( uint8_t length, movement_reason_t reason, bool overwrite){
    int8_t i;
    for(i = 0; i < QUEUELEN; ++i){
-      if(move_queue[(current_move + i) % QUEUELEN].reason < reason){
+      movement_reason_t why = move_queue[(current_move + i) % QUEUELEN].reason;
+      if( why < reason || (why == reason && overwrite) ){
          break;
       }
    }
@@ -127,9 +125,12 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
 
    #define DEFINE_MOVE(NAME, n_moves, DO_SCHEDULE_MOVES) \
          case NAME: \
-         i = next_available_index(n_moves, reason); \
-         if(i == -1 || (when == IMMEDIATELY_ELSE_IGNORE && i != 0)){ \
-            break; \
+         i = next_available_index(n_moves, reason, when == IMMEDIATELY_WITH_OVERWRITE); \
+         if(i == -1 || (when != NEXT_AVAILABLE_TIME && i != 0)){ \
+            return false; \
+         } \
+         if(when != NEXT_AVAILABLE_TIME){ \
+            movman_init();\
          } \
          i = (current_move + i) % QUEUELEN; \
          DO_SCHEDULE_MOVES \
@@ -139,6 +140,7 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
          move_queue[i].move_funct = &motors_set_speed; \
          move_queue[i].speed      = 0; \
          move_queue[i].timeout    = TIMEOUT; \
+         move_queue[i].reason     = reason; \
          i = (i + 1) % QUEUELEN;
 
    #define MOVE_STRAIGHT(DIRECTION, TIMEOUT) \
@@ -146,6 +148,7 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
          move_queue[i].speed      = 255;        \
          move_queue[i].dir        = DIRECTION;        \
          move_queue[i].timeout    = TIMEOUT; \
+         move_queue[i].reason     = reason; \
          i = (i + 1) % QUEUELEN;
 
    #define ROTATE(DIRECTION, TIMEOUT) \
@@ -153,6 +156,7 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
          move_queue[i].speed      = 255; \
          move_queue[i].turn_dir   = DIRECTION; \
          move_queue[i].timeout    = TIMEOUT; \
+         move_queue[i].reason     = reason; \
          i = (i + 1) % QUEUELEN;
 
    #define TURN(DIRECTION, TURN_DIRECTION, TIMEOUT) \
@@ -160,17 +164,10 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
          move_queue[i].speed      = 255; \
          move_queue[i].dir        = DIRECTION; \
          move_queue[i].turn_dir   = TURN_DIRECTION; \
-         move_queue[i].param      = 150; /*radius*/  \
+         move_queue[i].param      = 15; /*radius*/  \
          move_queue[i].timeout    = TIMEOUT; \
+         move_queue[i].reason     = reason; \
          i = (i + 1) % QUEUELEN;
-
-
-   if(current_move_reason >= reason){
-      return false;  // we're doing something more important
-   }
-
-   current_move_reason = reason;
-   current_move        = 0;
 
    int8_t i;
 
@@ -181,83 +178,117 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
       WAIT_5_SECONDS_THEN_FULL_FORWARD_FOR_A_LONG_TIME,
          2,
          PAUSE(4875)
-         MOVE_STRAIGHT(FWD, UINT16_MAX))
+         MOVE_STRAIGHT(FWD, UINT16_MAX)
+      )
 
       DEFINE_MOVE(
       MOVE_FORWARD,
          1,
-         MOVE_STRAIGHT(FWD, 1000))
+         MOVE_STRAIGHT(FWD, 1000)
+      )
 
 
       DEFINE_MOVE(
       SEARCH_PATTERN,
          3,
+         MOVE_STRAIGHT(FWD, 3000)
          ROTATE(LEFT, 1400)
          ROTATE(RIGHT, 700)
-         MOVE_STRAIGHT(FWD, 3000))
+      )
 
       DEFINE_MOVE(
       BACKUP_THEN_TURN_90_CCW,
          3,
          MOVE_STRAIGHT(REV, 1000)
          ROTATE(LEFT, 1400)
-         MOVE_STRAIGHT(FWD, 1500))
+      )
+
+      DEFINE_MOVE(
+      SMALL_MOVE_FORWARD,
+         1,
+         MOVE_STRAIGHT(FWD, 400)
+      )
+
+      DEFINE_MOVE(
+      SMALL_ROTATE_LEFT,
+         1,
+         ROTATE(LEFT, 400)
+      )
+
+      DEFINE_MOVE(
+      SMALL_ROTATE_RIGHT,
+         1,
+         ROTATE(RIGHT, 400)
+      )
 
       DEFINE_MOVE(
       SMALL_TURN_LEFT,
          1,
-         TURN(FWD, LEFT, 400))
+         TURN(FWD, LEFT, 400)
+      )
 
       DEFINE_MOVE(
       SMALL_TURN_RIGHT,
          1,
-         TURN(FWD, RIGHT, 400))
+         TURN(FWD, RIGHT, 400)
+      )
 
 
       default:
-         move_queue[0].move_funct = NULL;
-         current_move_reason      = NO_REASON;
          return false;
    }
 
    EXECUTE_CURRENT_MOVE();
 
    return true;
+   #undef DEFINE_MOVE
+   #undef PAUSE
+   #undef MOVE_STRAIGHT
+   #undef ROTATE
+   #undef TURN
 }
 
 #ifndef __AVR__
 
-
-#define PRINT_MOVE(i) printf("%s %s(%d, %s, %s, %d)\n",           \
+#define PRINT_MOVE(i) if(move_queue[i].reason == NO_REASON) \
+      printf("%s [               ]\n",           \
+     i == current_move ? "--> " : "    "); \
+     else \
+      printf("%s %s(%d, %s, %s, %d)\n",           \
      i == current_move ? "--> " : "    ", \
-     move_queue[i].move_funct == &motors_set_speed ? "motors_set_speed" : "motors_rotate", \
+     move_queue[i].move_funct == &motors_set_speed ? "motors_set_speed" : \
+     (move_queue[i].move_funct == &motors_turn_in_arc ? "motors_turn_in_arc" : "motors_rotate"), \
      move_queue[i].speed,    \
      move_queue[i].dir == FWD ? "FWD" : "REV", \
      move_queue[i].turn_dir == LEFT ? "LEFT" : "RIGHT", \
-     move_queue[i].timeout) \
+     move_queue[i].timeout)
 
-#define STEP() do{                  \
+#define PRINT_QUEUE() do{                  \
    for(uint8_t i = 0; i < QUEUELEN; ++i){ \
       PRINT_MOVE(i); \
    } \
-   movman_current_move_completed(); \
-   movman_schedule_move(SEARCH_PATTERN, TO_SEARCH); \
 }while(0);
 
+#define STEP() do{                  \
+   movman_current_move_completed(); \
+   movman_schedule_move(SEARCH_PATTERN, TO_SEARCH, NEXT_AVAILABLE_TIME); \
+}while(0)
 
 
 int main(int argc, const char *argv[])
 {
 
-   movman_schedule_move(SEARCH_PATTERN, TO_SEARCH);
+   movman_init();
+   PRINT_QUEUE();
+   movman_schedule_move(
+      WAIT_5_SECONDS_THEN_FULL_FORWARD_FOR_A_LONG_TIME,
+      TO_MEET_STARTUP_REQUIREMENT,
+      IMMEDIATELY);
 
-   STEP();
-   STEP();
-
-   movman_schedule_move(BACKUP_THEN_TURN_90_CCW, TO_AVOID_EDGE);
-
-   for(uint8_t i = 0; i < 16; ++i){
+   PRINT_QUEUE();
+   for(int i = 0; i < 16; ++i){
       STEP();
+      PRINT_QUEUE();
    }
 
 
