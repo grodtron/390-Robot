@@ -191,16 +191,23 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
       DEFINE_MOVE(
       SEARCH_PATTERN,
          3,
-         MOVE_STRAIGHT(FWD, 1500)
-         ROTATE(LEFT, 900)
-         ROTATE(RIGHT, 600)
+         MOVE_STRAIGHT(FWD, 1100)
+         ROTATE(LEFT, 700)
+         ROTATE(RIGHT, 500)
       )
 
       DEFINE_MOVE(
-      BACKUP_THEN_TURN_90_CCW,
-         3,
+      BACKUP_THEN_TURN_90_CW,
+         2,
          MOVE_STRAIGHT(REV, 1000)
-         ROTATE(LEFT, 1400)
+         ROTATE(RIGHT, 900)
+      )
+
+      DEFINE_MOVE(
+      BACKUP_THEN_TURN_30_CCW,
+         2,
+         MOVE_STRAIGHT(REV, 1000)
+         ROTATE(LEFT, 700)
       )
 
       DEFINE_MOVE(
@@ -210,15 +217,21 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
       )
 
       DEFINE_MOVE(
-      SMALL_ROTATE_LEFT,
+      LONG_ROTATE_LEFT,
          1,
-         ROTATE(LEFT, 400)
+         ROTATE(LEFT, 1750)
       )
 
       DEFINE_MOVE(
-      SMALL_ROTATE_RIGHT,
+      ROTATE_LEFT,
          1,
-         ROTATE(RIGHT, 400)
+         ROTATE(LEFT, 750)
+      )
+
+      DEFINE_MOVE(
+      ROTATE_RIGHT,
+         1,
+         ROTATE(RIGHT, 750)
       )
 
       DEFINE_MOVE(
@@ -232,7 +245,6 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
          1,
          TURN(FWD, RIGHT, 400)
       )
-
 
       default:
          return false;
