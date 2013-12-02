@@ -1,8 +1,6 @@
 #include <avr/interrupt.h>
 #include <avr/io.h>
 
-#include <stdbool.h>
-
 #include "../include/contacts.h"
 #include "../include/event_queue.h"
 #include "../include/leds.h"
@@ -70,60 +68,39 @@ static contact_position_t handle_contact(){
    return pos;
 }
 
-static bool debouncing;
-
 ISR(TIMER0_OVF_vect){
 
-   if(debouncing){
-      // we're debouncing an interrupt request
 
-      static uint8_t reads = 0xAA; // 10101010
+   static uint8_t reads = 0xAA; // 10101010
 
-      reads <<= 1;
-      reads  |= (PIND >> PD2) & 1;
+   reads <<= 1;
+   reads  |= (PIND >> PD2) & 1;
 
-      if(reads == 0xFF){
-         // Here it means we've read eight 1s in a row.
-         // With our period of 0.25ms, this represents
-         // 2ms of a stable logic high, which is good enough for me!
+   if(reads == 0xFF){
+      // Here it means we've read eight 1s in a row.
+      // With our period of 0.25ms, this represents
+      // 2ms of a stable logic high, which is good enough for me!
 
-         // We'll determine the right event type and add it to the queue
-         handle_contact();
+      // We'll determine the right event type and add it to the queue
+      handle_contact();
 
-         // Then reset the debouncing logic
-         reads = 0xAA;
-         debouncing = false;
+      // Then reset the debouncing logic
+      reads = 0xAA;
+      TIMER0_OFF();
 
-      }else if(reads == 0x00){
-         // Likewise this represents a stable logic low,
-         // which we don't care about, so we just ignore it.
+   }else if(reads == 0x00){
+      // Likewise this represents a stable logic low,
+      // which we don't care about, so we just ignore it.
 
-         // Reset the debouncing logic
-         reads = 0xAA;
-         // Shut off the timer, there's nothing to report about now
-         TIMER0_OFF();
-      }
-   }else{
-
-      static uint8_t count = 0;
-      ++count;
-
-      // this works out to an update about one every 65ms, which is perfectly fine
-      // for our needs
-      if(count == 255){
-         contact_position_t pos = handle_contact();
-
-         if(pos == CONTACT_NONE){
-            // We can stop reporting in this case
-            TIMER0_OFF();
-         }
-      }
+      // Reset the debouncing logic
+      reads = 0xAA;
+      // Shut off the timer, there's nothing to report about now
+      TIMER0_OFF();
    }
 }
 
 ISR(INT0_vect){
    // All we do here is start a debouncing timer
-   debouncing = true;
    TIMER0_ON();
 
 }
