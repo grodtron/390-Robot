@@ -193,7 +193,7 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
          3,
          MOVE_STRAIGHT(FWD, 1100)
          ROTATE(LEFT, 700)
-         ROTATE(RIGHT, 500)
+         ROTATE(RIGHT, 600)
       )
 
       DEFINE_MOVE(
