@@ -72,8 +72,8 @@ void handle_new_prox_readings(){
    #define SEEK_MODE 1
    #define SEARCH_MODE 0
 
-   #define TURN_ON_MARGIN 24
-   #define TURN_OFF_MARGIN 16
+   #define TURN_ON_MARGIN 12
+   #define TURN_OFF_MARGIN 8
 
 
    // hysterisis! Lower the noise margin if we're already in seek mode
@@ -85,9 +85,11 @@ void handle_new_prox_readings(){
    #define SEEK_LEFT 1
    #define SEEK_RIGHT 2
    static uint8_t seek_direction = SEEK_NONE;
+
+   #define SEEK_THRESH 5
    static uint8_t seek_count = 0;
 
-   #define yellow (seek_count > 5)
+   #define yellow (seek_count > SEEK_THRESH)
 
 
    uint8_t left;
@@ -95,38 +97,39 @@ void handle_new_prox_readings(){
 
    adc_get_prox_readings(&left, &right);
 
-   if(left > right + margin){
-         led_set_rgy(1,0,yellow);
-         movman_schedule_move(SMALL_TURN_LEFT, TO_SEEK, IMMEDIATELY_WITH_OVERWRITE);
-         mode = SEEK_MODE;
-         if(seek_direction != SEEK_LEFT){
-            seek_direction = SEEK_LEFT;
-            seek_count = 0;
-         }
-         if (seek_count < 255){
-            ++seek_count;
-         }
-   }else if(right > left + margin){
-         led_set_rgy(0,1,yellow);
-         movman_schedule_move(SMALL_TURN_RIGHT, TO_SEEK, IMMEDIATELY_WITH_OVERWRITE);
-         mode = SEEK_MODE;
-         if(seek_direction != SEEK_RIGHT){
-            seek_direction = SEEK_RIGHT;
-            seek_count = 0;
-         }
-         if (seek_count < 255){
-            ++seek_count;
-         }
-   }else{
-      if( left > 45 && right > 45 ){
-         led_set_rgy(1,1,yellow);
-         movman_schedule_move(SMALL_MOVE_FORWARD, TO_SEEK, IMMEDIATELY_WITH_OVERWRITE);
-         mode = SEEK_MODE;
-         seek_direction = SEEK_NONE;
+   if(left > 25 || right > 25){
+      if(left > right + margin){
+            led_set_rgy(1,0,yellow);
+            movman_schedule_move(SMALL_TURN_LEFT, TO_SEEK, IMMEDIATELY_WITH_OVERWRITE);
+            mode = SEEK_MODE;
+            if(seek_direction != SEEK_LEFT){
+               seek_direction = SEEK_LEFT;
+               seek_count = 0;
+            }
+            if (seek_count < 255){
+               ++seek_count;
+            }
+      }else if(right > left + margin){
+            led_set_rgy(0,1,yellow);
+            movman_schedule_move(SMALL_TURN_RIGHT, TO_SEEK, IMMEDIATELY_WITH_OVERWRITE);
+            mode = SEEK_MODE;
+            if(seek_direction != SEEK_RIGHT){
+               seek_direction = SEEK_RIGHT;
+               seek_count = 0;
+            }
+            if (seek_count < 255){
+               ++seek_count;
+            }
       }else{
+            led_set_rgy(1,1,yellow);
+            movman_schedule_move(SMALL_MOVE_FORWARD, TO_SEEK, IMMEDIATELY_WITH_OVERWRITE);
+            mode = SEEK_MODE;
+            seek_direction = SEEK_NONE;
+      }
+   }else{
          led_set_rgy(0,0,yellow);
          // ~ 73ms * 8 ~= 1 second
-         if(seek_count > 5){
+         if(seek_count > SEEK_THRESH){
             switch(seek_direction){
                case SEEK_RIGHT:
                   movman_schedule_move(ROTATE_RIGHT, TO_SEEK, IMMEDIATELY_WITH_OVERWRITE);
@@ -141,7 +144,7 @@ void handle_new_prox_readings(){
 
          mode = SEARCH_MODE;
          seek_direction = SEEK_NONE;
-      }
+
    }
 
    #undef SEARCH_MODE
