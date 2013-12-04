@@ -193,7 +193,9 @@ void motors_turn_in_arc(uint8_t speed, motor_dir_t dir, motor_turn_dir_t turn_di
    //
    //  NB, `radius >= 146` is assumed
 
-   uint8_t slow_speed = (uint8_t)( (((uint16_t)speed)*(radius - 146)) / ((uint16_t)radius) );
+   UNUSED_PARAM(radius);
+
+   uint8_t slow_speed = 0;//(uint8_t)( (((uint16_t)speed)*(radius - 146)) / ((uint16_t)radius) );
 
 
    if(turn_dir == LEFT){

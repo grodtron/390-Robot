@@ -97,7 +97,7 @@ void handle_new_prox_readings(){
 
    adc_get_prox_readings(&left, &right);
 
-   if(left > 25 || right > 25){
+   if(left > 35 || right > 35){
       if(left > right + margin){
             led_set_rgy(1,0,yellow);
             movman_schedule_move(SMALL_TURN_LEFT, TO_SEEK, IMMEDIATELY_WITH_OVERWRITE);
