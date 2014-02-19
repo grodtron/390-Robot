@@ -1,5 +1,5 @@
 # Microcontroller for gcc's -mmcu option
-MCU     = atmega8
+MCU     = atmega644
 # Optimization level for gcc
 OPT_LVL = 1
 
@@ -15,9 +15,9 @@ LD      = avr-gcc
 LDFLAGS = -mmcu=$(MCU) -O$(OPT_LVL) $(WARNINGS)
 
 # Gotta call it something...
-PROJ    = robot
+PROJ    = contacts
 # Source files that we will use
-SRCS    := adc.c contacts.c driver.c event_queue.c leds.c motors.c movement_manager.c
+SRCS    := contacts.c contacts_main.c event_queue.c
 
 # Stuff related to generating the actual hex format
 OBJCOPY = avr-objcopy
@@ -27,9 +27,9 @@ HEX_FMT = ihex
 # AVR, dude
 AVRDUDE            = avrdude
 # USBTiny is the ISP
-AVRDUDE_PROGRAMMER = usbtiny
+AVRDUDE_PROGRAMMER = avrispmkII
 # atmega 8 is the chip
-AVRDUDE_MCU        = m8
+AVRDUDE_MCU        = m644
 # intel hex format
 AVRDUDE_WRITE_FMT  = i
 
@@ -95,5 +95,5 @@ $(ELF_TRG): $(addprefix $(OBJ_DIR)/, $(SRCS:%.c=%.o))
 
 # Phony target to write our hex file to the MCU
 writeflash: $(HEX_TRG)
-	$(AVRDUDE) -c $(AVRDUDE_PROGRAMMER) -p $(AVRDUDE_MCU) -e -U flash:w:$(PROJ).hex:$(AVRDUDE_WRITE_FMT)
+	$(AVRDUDE) -c $(AVRDUDE_PROGRAMMER) -p $(AVRDUDE_MCU) -P usb -e -U flash:w:$(PROJ).hex:$(AVRDUDE_WRITE_FMT)
 
