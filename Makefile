@@ -15,9 +15,9 @@ LD      = avr-gcc
 LDFLAGS = -mmcu=$(MCU) -O$(OPT_LVL) $(WARNINGS)
 
 # Gotta call it something...
-PROJ    = contacts
+PROJ    = robot
 # Source files that we will use
-SRCS    := line_sensors.c line_sensors_main.c event_queue.c iodefs.c
+SRCS    := driver.c line_sensors_main.c motors_main.c motors.c line_sensors.c event_queue.c iodefs.c movement_manager.c
 
 # Stuff related to generating the actual hex format
 OBJCOPY = avr-objcopy

@@ -32,7 +32,7 @@ void handle_line(){
    }
 }
 
-int main()
+void line_sensors_main()
 {
 
    DDRA |= (1<<PA6)|(1<<PA7);
@@ -45,14 +45,6 @@ int main()
    line_sensors_init();
    event_q_init();
 
-   // TODO - figure out where to do this, and or at least change the
-   // variable name, lol
-   //
-   // disable jtag, must write this bit twice within four cycles...
-   // page 267
-   uint8_t fuck_jtag = MCUCR | (1<<JTD);
-   MCUCR = fuck_jtag;
-   MCUCR = fuck_jtag;
 
    sei();
 
@@ -74,6 +66,4 @@ int main()
       }
 
    }
-
-   return 0;
 }

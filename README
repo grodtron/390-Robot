@@ -1,0 +1,4 @@
+Modes are LSB first. Currently:
+
+   Mode 1: line sensors test
+   Mode 2: motors test

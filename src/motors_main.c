@@ -5,7 +5,7 @@
 #include "../include/event_queue.h"
 #include "../include/iodefs.h"
 
-int main()
+void motors_main()
 {
 
    iodefs_init();
@@ -44,6 +44,4 @@ int main()
       }
 
    }
-
-   return 0;
 }
