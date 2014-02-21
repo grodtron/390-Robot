@@ -17,7 +17,7 @@ LDFLAGS = -mmcu=$(MCU) -O$(OPT_LVL) $(WARNINGS)
 # Gotta call it something...
 PROJ    = contacts
 # Source files that we will use
-SRCS    := contacts.c contacts_main.c event_queue.c
+SRCS    := motors.c movement_manager.c event_queue.c iodefs.c motors_main.c
 
 # Stuff related to generating the actual hex format
 OBJCOPY = avr-objcopy

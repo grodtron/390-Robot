@@ -10,6 +10,8 @@
 #include "../include/static_assert.h"
 #include "../include/unused_param.h"
 
+#include "../include/iodefs.h"
+
 typedef struct {
    uint8_t curr_speed;
    uint8_t targ_speed;
@@ -35,25 +37,27 @@ static uint16_t current_timeout;
 // (page 79);
 //
 // Also NB that high reg is written before low reg in both cases.
-#define SET_L_MOTOR_SPEED(val) do{ OCR1AH=0; OCR1AL=(val); }while(0)
-#define SET_R_MOTOR_SPEED(val) do{ OCR1BH=0; OCR1BL=(val); }while(0)
+#define SET_L_MOTOR_SPEED(val) do{ *io.lpwm_motor_reg_h=0; *io.lpwm_motor_reg_l=(val); }while(0)
+#define SET_R_MOTOR_SPEED(val) do{ *io.rpwm_motor_reg_h=0; *io.rpwm_motor_reg_l=(val); }while(0)
 
 #define SET_L_MOTOR_DIR(dir)   do{\
                                     if( (dir) == FWD ){ \
-                                       /* NB turn off and turn on are simultaneous */ \
-                                       PORTD = (PORTD | (1<<PD5)) & ~(1<<PD6); \
+                                       /* NB turn off before turn on */ \
+                                       *io.lr_motor_port &= ~io.lr_motor_mask;  \
+                                       *io.lf_motor_port |=  io.lf_motor_mask;  \
                                     }else{ \
-                                       PORTD = (PORTD | (1<<PD6)) & ~(1<<PD5); \
+                                       *io.lf_motor_port &= ~io.lf_motor_mask;  \
+                                       *io.lr_motor_port |=  io.lr_motor_mask;  \
                                     } \
                                }while(0)
 #define SET_R_MOTOR_DIR(dir)   do{\
                                     if( (dir) == FWD ){ \
                                        /* NB turn off before turn on */ \
-                                       PORTB &= ~(1 << PB0); \
-                                       PORTD |=  (1 << PD7); \
+                                       *io.rr_motor_port &= ~io.rr_motor_mask;  \
+                                       *io.rf_motor_port |=  io.rf_motor_mask;  \
                                     }else{ \
-                                       PORTD &= ~(1 << PD7); \
-                                       PORTB |=  (1 << PB0); \
+                                       *io.rf_motor_port &= ~io.rf_motor_mask;  \
+                                       *io.rr_motor_port |=  io.rr_motor_mask;  \
                                     } \
                                }while(0)
 
@@ -65,31 +69,38 @@ void motors_init(){
 
 
 #ifdef __AVR__
-   DDRB  |= (1 << DDB1) | (1 << DDB2)   // Set OC1A and OC1B as outputs
-         |  (1 << DDB0);                // Set Motor-Right Backwards as output
 
-   DDRD  |= (1 << DDD5) | (1 << DDD6) | (1 << DDD7); // Set other motor-dir lines as ouput
+   // Set motor control pins as outputs
+   *io.lf_motor_ddr |= io.lf_motor_mask;
+   *io.lr_motor_ddr |= io.lr_motor_mask;
+   *io.rf_motor_ddr |= io.rf_motor_mask;
+   *io.rr_motor_ddr |= io.rr_motor_mask;
 
-   TCCR1A = (1 << COM1A1) | (INVERTED_OUTPUT << COM1A0) // Set OC1A as PWM output (page 98)
-          | (1 << COM1B1) | (INVERTED_OUTPUT << COM1B0) // Set OC1B as PWM output (page 98)
-          | (0 << FOC1A)  | (0 << FOC1B)  // Set these 0 (unused, see page 99)
-          | (0 << WGM11)  | (1 << WGM10)  // First half of Fast PWM, 8-bit (page 99)
+   // Set motor PWM pins as outputs
+   *io.lpwm_motor_ddr |= io.lpwm_motor_mask;
+   *io.rpwm_motor_ddr |= io.rpwm_motor_mask;
+
+   // Set up and start PWM
+   TCCR1A = (1 << COM1A1) | (INVERTED_OUTPUT << COM1A0) // Set OC1A as PWM output (Atmega644 page 126)
+          | (1 << COM1B1) | (INVERTED_OUTPUT << COM1B0) // Set OC1B as PWM output (Atmega644 page 126)
+          | (0 << WGM11)  | (1 << WGM10)  // First half of Fast PWM, 8-bit (Atmega644 page 127 / 125)
           ;
 
-   TCCR1B = (0 << WGM13)  | (1 << WGM12)  // Second half of Fast PWM, 8-bit (page 99)
-          | (0 << ICNC1)  | (0 << ICES1)  // Stuff we don't care about (page 100)
+   TCCR1B = (0 << WGM13)  | (1 << WGM12)  // Second half of Fast PWM, 8-bit (Atmega644 page 127)
+          | (0 << ICNC1)  | (0 << ICES1)  // Stuff we don't care about (Atmega644 page 127)
           | (0 << CS12) // Clock select, we use no prescaler, since we are in 8 bit mode
            |(0 << CS11) // this gives a PWM frequency of 1MHz/256 ~= 4kHZ which is perfect
-           |(1 << CS10) // for our uses. (page 100)
+           |(1 << CS10) // for our uses. (Atmega644 page 128)
           ;
 
    // turns motors off and resets tweens
    motors_hard_stop();
 
+   // TODO update page numbers to Atmega644 datasheet
    // As per table 39 on page 99, we can safely also use this timer for our other timing purposes
    // using the overflow interrupt, which is set once per PWM cycle ~= 4 times per ms.
    //
-   TIMSK  |= (1 << TOIE1);
+   TIMSK1 |= (1 << TOIE1);
 #endif
 }
 
@@ -229,6 +240,7 @@ bool motors_movement_in_progress(){
    return current_timeout != 0;
 }
 
+// TODO - this doesn't brake, it coasts... need full PWM, and both high or both low
 void motors_hard_stop(){
 #ifdef __AVR__
    // Turn all motors off, and set them non-tweening
