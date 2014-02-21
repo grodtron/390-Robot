@@ -30,4 +30,9 @@ void iodefs_init(){
    io.rpwm_motor_reg_l  = &OCR1BL;
    io.rpwm_motor_reg_h  = &OCR1BH;
    io.rpwm_motor_mask   = 1 << PD4;
+
+   io.linesens_fl = 1 << PC4;
+   io.linesens_fr = 1 << PC5;
+   io.linesens_rl = 1 << PC6;
+   io.linesens_rr = 1 << PC7;
 }

@@ -1,26 +1,14 @@
 #include <avr/interrupt.h>
 #include <avr/io.h>
 
-#include "../include/contacts.h"
+#include "../include/line_sensors.h"
 #include "../include/event_queue.h"
 #include "../include/leds.h"
+#include "../include/iodefs.h"
 
-// TODO - just use one interrupt for each?
-void contacts_init(){
+static uint8_t val;
 
-   // // TODO - reverify with our new switches
-   //
-   // Now we set up timer 0, which we will use for debouncing purposes
-   // Based on observations in the lab, the switch tends to bounce for
-   // about 2ms before becoming stable. We also want to react as fast as
-   // possible.
-   //
-   // Since the timer will generate an interrupt every time it overflows,
-   // and it overflows once every 256 clocks, it already acts as a frequency
-   // divider. The period will be 0.256ms ~= 0.25 ms
-   //
-   // With this, if we wait until 8 stable readings in a row, we will only
-   // fire an event after a little over 2ms of stability, which should be perfect
+void line_sensors_init(){
 
    // CTC mode, no PWM (Atmega644 datasheet, page 99)
    TCCR0A &= ~(1 << WGM00);
@@ -29,55 +17,70 @@ void contacts_init(){
 
    OCR0A = 127;
 
-   // The clock will only be started when we need it, and will be stopped
-   // after the debounce is done.
    TIMSK0 |= (1 << OCIE0A); // enable interrupt (page 102, atmega644 datasheet)
 
-   // Turn on clock, 256 us period
-   TCCR0B |= (1 << CS00);
-
-   DDRA |= (1 << PA0);
+   // Turn on clock, 1MHz fcpu, with /8 prescaler, counting up to 63 gives a 512 us period
+   TCCR0B |= (1 << CS01);
+   OCR0A = 63;
 }
 
+// Because we want max speed in this interrupt, and because we are only checking
+// for the presence of the line, not the location, we don't use io_defs here
 ISR(TIMER0_COMPA_vect){
 
    static uint8_t mode = 0;
 
    if(mode){
 
-      OCR0A = 150;
-
       // Put the pin into a high-z ground, so that the cap
       // slowly discharged through the photo transistor
 
       // Set as input
-      DDRA &= ~(1 << PA1);
+      IO_LINESENS_DDR  &= ~IO_LINESENS_MASK;
       // Turn off internal pull up.
-      PORTA &= ~(1 << PA1);
+      IO_LINESENS_PORT &= ~IO_LINESENS_MASK;
 
    }else{
 
-      OCR0A = 64;
-
       // read
-      uint8_t val = (PINA >> PA1) & 1;
+      uint8_t new_val = (~IO_LINESENS_PIN) & IO_LINESENS_MASK;
 
       // Set as output
-      DDRA |= (1 << PA1);
+      IO_LINESENS_DDR  |= IO_LINESENS_MASK;
 
       // write high
-      PORTA |= (1 << PA1);
+      IO_LINESENS_PORT |= IO_LINESENS_MASK;
 
-      // indicate on LED
-      if(val){
-         PORTA &= ~(1 << PA0);  
-      }else{
-         PORTA |=  (1 << PA0);  
+      // If the status has changed, keep track of that.
+      if(val != new_val){
+         val = new_val;
+         // TODO - Is it useful to notify for every change in line status?
+         // should we only notify when there is a change and there is a line
+         // detected?
+         event_q_add_event(LINE_DETECTED);
       }
-
    }
 
    mode = !mode;
+}
 
+line_position_t line_sensors_get_position(){
+
+   line_position_t ret = LINE_NONE;
+
+   if(val & io.linesens_fl){
+      ret |= LINE_FRONT_LEFT;
+   }
+   if(val & io.linesens_fr){
+      ret |= LINE_FRONT_RIGHT;
+   }
+   if(val & io.linesens_rl){
+      ret |= LINE_REAR_LEFT;
+   }
+   if(val & io.linesens_rr){
+      ret |= LINE_REAR_RIGHT;
+   }
+
+   return ret;
 }
 
