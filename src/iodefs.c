@@ -7,19 +7,19 @@ iodef_t io;
 void iodefs_init(){
    io.lf_motor_port = &PORTC;
    io.lf_motor_ddr  = &DDRC;
-   io.lf_motor_mask = 1 << PC1;
+   io.lf_motor_mask = 1 << PC3;
 
    io.lr_motor_port = &PORTC;
    io.lr_motor_ddr  = &DDRC;
-   io.lr_motor_mask = 1 << PC0;
+   io.lr_motor_mask = 1 << PC2;
 
    io.rf_motor_port = &PORTC;
    io.rf_motor_ddr  = &DDRC;
-   io.rf_motor_mask = 1 << PC2;
+   io.rf_motor_mask = 1 << PC1;
 
    io.rr_motor_port = &PORTC;
    io.rr_motor_ddr  = &DDRC;
-   io.rr_motor_mask = 1 << PC3;
+   io.rr_motor_mask = 1 << PC0;
 
    io.lpwm_motor_ddr    = &DDRD;
    io.lpwm_motor_reg_l  = &OCR1AL;
