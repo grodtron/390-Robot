@@ -72,7 +72,9 @@ void movman_init(){
    current_move = 0;
 }
 
-void movman_current_move_completed(){
+// TODO - this seems like a really bad way to handle this... making the caller
+// responsible for implementation details shit...
+bool movman_current_move_completed(){
 
    if(motors_movement_in_progress()){
       // Bullshit, the move's not complete at all!
@@ -81,7 +83,7 @@ void movman_current_move_completed(){
       // ones, it's possible we have old move-completed events in
       // the queue, so we double check to avoid spuriously cancelling
       // high-priority moves
-      return;
+      return false;
    }
 
    // NULL-ify the current movement in the queue
@@ -98,6 +100,7 @@ void movman_current_move_completed(){
       EXECUTE_CURRENT_MOVE();
    }
    // TODO - empty queue event?
+   return true;
 }
 
 
@@ -184,66 +187,66 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
       DEFINE_MOVE(
       MOVE_FORWARD,
          1,
-         MOVE_STRAIGHT(FWD, 1000)
+         MOVE_STRAIGHT(FWD, 500)
       )
 
 
       DEFINE_MOVE(
       SEARCH_PATTERN,
          3,
-         MOVE_STRAIGHT(FWD, 1100)
-         ROTATE(LEFT, 700)
-         ROTATE(RIGHT, 600)
+         MOVE_STRAIGHT(FWD, 550)
+         ROTATE(LEFT, 350)
+         ROTATE(RIGHT, 300)
       )
 
       DEFINE_MOVE(
       BACKUP_THEN_TURN_90_CW,
          2,
-         MOVE_STRAIGHT(REV, 1000)
-         ROTATE(RIGHT, 900)
+         MOVE_STRAIGHT(REV, 500)
+         ROTATE(RIGHT, 450)
       )
 
       DEFINE_MOVE(
       BACKUP_THEN_TURN_30_CCW,
          2,
-         MOVE_STRAIGHT(REV, 1000)
-         ROTATE(LEFT, 700)
+         MOVE_STRAIGHT(REV, 500)
+         ROTATE(LEFT, 350)
       )
 
       DEFINE_MOVE(
       SMALL_MOVE_FORWARD,
          1,
-         MOVE_STRAIGHT(FWD, 400)
+         MOVE_STRAIGHT(FWD, 200)
       )
 
       DEFINE_MOVE(
       LONG_ROTATE_LEFT,
          1,
-         ROTATE(LEFT, 1750)
+         ROTATE(LEFT, 900)
       )
 
       DEFINE_MOVE(
       ROTATE_LEFT,
          1,
-         ROTATE(LEFT, 750)
+         ROTATE(LEFT, 375)
       )
 
       DEFINE_MOVE(
       ROTATE_RIGHT,
          1,
-         ROTATE(RIGHT, 750)
+         ROTATE(RIGHT, 375)
       )
 
       DEFINE_MOVE(
       SMALL_TURN_LEFT,
          1,
-         TURN(FWD, LEFT, 400)
+         TURN(FWD, LEFT, 200)
       )
 
       DEFINE_MOVE(
       SMALL_TURN_RIGHT,
          1,
-         TURN(FWD, RIGHT, 400)
+         TURN(FWD, RIGHT, 200)
       )
 
       default:

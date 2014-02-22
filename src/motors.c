@@ -185,9 +185,11 @@ void motors_set_speed(uint8_t speed, motor_dir_t dir, motor_turn_dir_t dummy1, u
    UNUSED_PARAM(dummy1);
    UNUSED_PARAM(dummy2);
 
+   cli();
    _tween_motor_speed(&l_motor_tween, speed, dir);
    _tween_motor_speed(&r_motor_tween, speed, dir);
    current_timeout = timeout;
+   sei();
 }
 
 void motors_turn_in_arc(uint8_t speed, motor_dir_t dir, motor_turn_dir_t turn_dir, uint16_t radius, uint16_t timeout){
@@ -209,6 +211,7 @@ void motors_turn_in_arc(uint8_t speed, motor_dir_t dir, motor_turn_dir_t turn_di
    uint8_t slow_speed = 0;//(uint8_t)( (((uint16_t)speed)*(radius - 146)) / ((uint16_t)radius) );
 
 
+   cli();
    if(turn_dir == LEFT){
       _tween_motor_speed(&l_motor_tween, slow_speed, dir);
       _tween_motor_speed(&r_motor_tween,      speed, dir);
@@ -218,6 +221,7 @@ void motors_turn_in_arc(uint8_t speed, motor_dir_t dir, motor_turn_dir_t turn_di
    }
 
    current_timeout = timeout;
+   sei();
 }
 
 void motors_rotate(uint8_t speed, motor_dir_t dummy1, motor_turn_dir_t dir, uint16_t dummy2, uint16_t timeout){
@@ -225,6 +229,7 @@ void motors_rotate(uint8_t speed, motor_dir_t dummy1, motor_turn_dir_t dir, uint
    UNUSED_PARAM(dummy1);
    UNUSED_PARAM(dummy2);
 
+   cli();
    if(dir == LEFT){
       _tween_motor_speed(&l_motor_tween, speed, REV);
       _tween_motor_speed(&r_motor_tween, speed, FWD);
@@ -234,6 +239,7 @@ void motors_rotate(uint8_t speed, motor_dir_t dummy1, motor_turn_dir_t dir, uint
    }
 
    current_timeout = timeout;
+   sei();
 }
 
 bool motors_movement_in_progress(){

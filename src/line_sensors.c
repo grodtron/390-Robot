@@ -21,7 +21,7 @@ void line_sensors_init(){
 
    // Turn on clock, 1MHz fcpu, with /8 prescaler, counting up to 63 gives a 512 us period
    TCCR0B |= (1 << CS01);
-   OCR0A = 63;
+   OCR0A = 128;
 }
 
 // Because we want max speed in this interrupt, and because we are only checking

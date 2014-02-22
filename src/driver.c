@@ -9,6 +9,7 @@
 void robot_main();
 void line_sensors_main();
 void motors_main();
+void ring_robot_main();
 
 int main()
 {
@@ -30,6 +31,8 @@ int main()
          line_sensors_main();
       case 2:
          motors_main();
+      case 3:
+         ring_robot_main();
       default:
          break;
    }

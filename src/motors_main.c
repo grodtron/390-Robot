@@ -1,5 +1,8 @@
 #include <avr/interrupt.h>
 
+#define F_CPU 1000000UL
+#include <util/delay.h>
+
 #include "../include/motors.h"
 #include "../include/movement_manager.h"
 #include "../include/event_queue.h"
@@ -7,6 +10,23 @@
 
 void motors_main()
 {
+
+   DDRA |= (1<<PA6)|(1<<PA7);
+   DDRD |= (1<<PD6)|(1<<PD7);
+
+   PORTA |= (1<<PA6)|(1<<PA7);
+   PORTD |= (1<<PD6)|(1<<PD7);
+
+   PORTA ^= (1<<PA7);
+   _delay_ms(100);
+   PORTA ^= (1<<PA7);
+   _delay_ms(100);
+   PORTA ^= (1<<PA7);
+   _delay_ms(100);
+   PORTA ^= (1<<PA7);
+   _delay_ms(100);
+   PORTA ^= (1<<PA7);
+   _delay_ms(100);
 
    iodefs_init();
 
@@ -18,6 +38,9 @@ void motors_main()
 
    movman_schedule_move(MOVE_FORWARD, TO_SEEK, IMMEDIATELY);
 
+   uint8_t i = 0;
+
+
    while(1){
 
       // Testing in the lab showed this runs every ~95us
@@ -26,20 +49,39 @@ void motors_main()
 
       switch(e){
 
-         case LINE_DETECTED:
-            break;
-         case CONTACT_DETECTED_BOTH:
-         case CONTACT_DETECTED_FRONT:
-            break;
-         case CONTACT_DETECTED_REAR:
-            break;
          case MOVEMENT_COMPLETE:
-            break;
-         case NEW_PROXIMITY_READINGS:
-            break;
-         default:
+
+            if(movman_current_move_completed()){
+
+               i = (i+1)%3;
+
+               PORTA ^= (1<<PA7);
+               switch(i){
+                  case 0:
+                     PORTD &= ~(1<<PD6);
+                     PORTA |=  (1<<PA6);
+                     PORTD |=  (1<<PD7);
+                     movman_schedule_move(MOVE_FORWARD, TO_SEEK, IMMEDIATELY);
+                     break;
+                  case 1:
+                     PORTA &= ~(1<<PA6);
+                     PORTD |=  (1<<PD6);
+                     PORTD |=  (1<<PD7);
+                     movman_schedule_move(ROTATE_LEFT, TO_SEEK, IMMEDIATELY);
+                     break;
+                  case 2:
+                     PORTD &= ~(1<<PD7);
+                     PORTD |=  (1<<PD6);
+                     PORTA |=  (1<<PA6);
+                     movman_schedule_move(ROTATE_RIGHT, TO_SEEK, IMMEDIATELY);
+                     break;
+               }
+            }
+
             break;
 
+         default:
+            break;
 
       }
 
