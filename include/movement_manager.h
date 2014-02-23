@@ -44,4 +44,6 @@ bool movman_current_move_completed();
 
 bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_time_t);
 
+void movman_switch_direction();
+
 #endif

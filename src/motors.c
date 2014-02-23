@@ -12,6 +12,8 @@
 
 #include "../include/iodefs.h"
 
+#include "../include/swap.h"
+
 typedef struct {
    uint8_t curr_speed;
    uint8_t targ_speed;
@@ -40,6 +42,18 @@ static uint16_t current_timeout;
 #define SET_L_MOTOR_SPEED(val) do{ *io.lpwm_motor_reg_h=0; *io.lpwm_motor_reg_l=(val); }while(0)
 #define SET_R_MOTOR_SPEED(val) do{ *io.rpwm_motor_reg_h=0; *io.rpwm_motor_reg_l=(val); }while(0)
 
+#define BRAKE_L_MOTOR(dir)   do{\
+                                    SET_L_MOTOR_SPEED(255); \
+                                    *io.lr_motor_port |= io.lr_motor_mask;  \
+                                    *io.lf_motor_port |= io.lf_motor_mask;  \
+                               }while(0)
+
+#define BRAKE_R_MOTOR(dir)   do{\
+                                    SET_R_MOTOR_SPEED(255); \
+                                    *io.rr_motor_port |= io.rr_motor_mask;  \
+                                    *io.rf_motor_port |= io.rf_motor_mask;  \
+                               }while(0)
+
 #define SET_L_MOTOR_DIR(dir)   do{\
                                     if( (dir) == FWD ){ \
                                        /* NB turn off before turn on */ \
@@ -50,6 +64,7 @@ static uint16_t current_timeout;
                                        *io.lr_motor_port |=  io.lr_motor_mask;  \
                                     } \
                                }while(0)
+
 #define SET_R_MOTOR_DIR(dir)   do{\
                                     if( (dir) == FWD ){ \
                                        /* NB turn off before turn on */ \
@@ -246,25 +261,40 @@ bool motors_movement_in_progress(){
    return current_timeout != 0;
 }
 
+void motors_switch_direction(){
+   UINT8_SWAP(l_motor_tween.curr_speed, r_motor_tween.curr_speed)
+   UINT8_SWAP(l_motor_tween.curr_dir, r_motor_tween.curr_dir)
+   UINT8_SWAP(l_motor_tween.targ_speed, r_motor_tween.targ_speed)
+   UINT8_SWAP(l_motor_tween.targ_dir, r_motor_tween.targ_dir)
+
+   UINT8_SWAP(l_motor_tween.complete, r_motor_tween.complete)
+
+   r_motor_tween.curr_dir = r_motor_tween.curr_dir == FWD ? REV : FWD;
+   r_motor_tween.targ_dir = r_motor_tween.targ_dir == FWD ? REV : FWD;
+
+   l_motor_tween.curr_dir = l_motor_tween.curr_dir == FWD ? REV : FWD;
+   l_motor_tween.targ_dir = l_motor_tween.targ_dir == FWD ? REV : FWD;
+}
+
 // TODO - this doesn't brake, it coasts... need full PWM, and both high or both low
 void motors_hard_stop(){
 #ifdef __AVR__
    // Turn all motors off, and set them non-tweening
+   cli();
    l_motor_tween.curr_speed = 0;
    l_motor_tween.curr_dir   = 0;
    l_motor_tween.targ_speed = 0;
    l_motor_tween.targ_dir   = 0;
    l_motor_tween.complete   = true;
-   SET_L_MOTOR_SPEED(0);
-   SET_L_MOTOR_DIR(FWD);
+   BRAKE_L_MOTOR();
 
    r_motor_tween.curr_speed = 0;
    r_motor_tween.curr_dir   = 0;
    r_motor_tween.targ_speed = 0;
    r_motor_tween.targ_dir   = 0;
    r_motor_tween.complete   = true;
-   SET_R_MOTOR_SPEED(0);
-   SET_R_MOTOR_DIR(FWD);
+   BRAKE_R_MOTOR();
+   sei();
 #endif
 }
 

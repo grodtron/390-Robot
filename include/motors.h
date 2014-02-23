@@ -1,18 +1,6 @@
 #ifndef MOTORS_H_
 #define MOTORS_H_
 
-/* TODO ?
-typedef enum {
-   ACCELING,
-   DECELING,
-   TURNING_R,
-   TURNING_L,
-   FORWARD,
-   REVERSE,
-   STOPPED
-} motor_state_t;
-*/
-
 #include <inttypes.h>
 #include <stdbool.h>
 
@@ -38,5 +26,7 @@ void motors_rotate(uint8_t speed, motor_dir_t dummy1, motor_turn_dir_t dir, uint
 void motors_hard_stop();
 
 bool motors_movement_in_progress();
+
+void motors_switch_direction();
 
 #endif

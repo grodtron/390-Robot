@@ -47,6 +47,8 @@ typedef struct {
 
 extern iodef_t io;
 
+void iodefs_switch_direction();
+
 void iodefs_init();
 
 #endif

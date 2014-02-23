@@ -72,6 +72,10 @@ void movman_init(){
    current_move = 0;
 }
 
+void movman_switch_direction(){
+   movman_init();
+}
+
 // TODO - this seems like a really bad way to handle this... making the caller
 // responsible for implementation details shit...
 bool movman_current_move_completed(){

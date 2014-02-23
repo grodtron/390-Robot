@@ -8,6 +8,24 @@
 #include "../include/event_queue.h"
 #include "../include/iodefs.h"
 
+#include "../include/switch_direction.h"
+
+void blink_one(){
+   int i;
+   for(i = 0; i < 2*5; ++i){
+      PORTA ^= (1<<PA7);
+      _delay_ms(100);
+   }
+}
+void blink_all(){
+   int i;
+   for(i = 0; i < 2*10; ++i){
+      PORTA ^= (1<<PA7)|(1<<PA6);
+      PORTD ^= (1<<PD7)|(1<<PD6);
+      _delay_ms(100);
+   }
+}
+
 void motors_main()
 {
 
@@ -17,16 +35,7 @@ void motors_main()
    PORTA |= (1<<PA6)|(1<<PA7);
    PORTD |= (1<<PD6)|(1<<PD7);
 
-   PORTA ^= (1<<PA7);
-   _delay_ms(100);
-   PORTA ^= (1<<PA7);
-   _delay_ms(100);
-   PORTA ^= (1<<PA7);
-   _delay_ms(100);
-   PORTA ^= (1<<PA7);
-   _delay_ms(100);
-   PORTA ^= (1<<PA7);
-   _delay_ms(100);
+   blink_all();
 
    iodefs_init();
 
@@ -55,24 +64,18 @@ void motors_main()
 
                i = (i+1)%3;
 
-               PORTA ^= (1<<PA7);
                switch(i){
                   case 0:
-                     PORTD &= ~(1<<PD6);
-                     PORTA |=  (1<<PA6);
-                     PORTD |=  (1<<PD7);
+
+                     switch_direction();
+
                      movman_schedule_move(MOVE_FORWARD, TO_SEEK, IMMEDIATELY);
+                     blink_one();
                      break;
                   case 1:
-                     PORTA &= ~(1<<PA6);
-                     PORTD |=  (1<<PD6);
-                     PORTD |=  (1<<PD7);
                      movman_schedule_move(ROTATE_LEFT, TO_SEEK, IMMEDIATELY);
                      break;
                   case 2:
-                     PORTD &= ~(1<<PD7);
-                     PORTD |=  (1<<PD6);
-                     PORTA |=  (1<<PA6);
                      movman_schedule_move(ROTATE_RIGHT, TO_SEEK, IMMEDIATELY);
                      break;
                }

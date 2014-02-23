@@ -9,6 +9,8 @@
 #include "../include/movement_manager.h"
 #include "../include/motors.h"
 
+#include "../include/switch_direction.h"
+
 
 static void indicate_line(line_position_t pos){
 
@@ -36,10 +38,9 @@ static void indicate_line(line_position_t pos){
 
 static void avoid_line(line_position_t pos){
    if(pos & LINE_FRONT){
-      movman_schedule_move(BACKUP_THEN_TURN_90_CW, TO_AVOID_EDGE, IMMEDIATELY_WITH_OVERWRITE);
-   }else if(pos & LINE_REAR){
-      movman_schedule_move(GO_FORWARD_BRIEFLY, TO_AVOID_EDGE, IMMEDIATELY_WITH_OVERWRITE);
-      movman_schedule_move(SMALL_TURN_LEFT, TO_AVOID_EDGE, NEXT_AVAILABLE_TIME);
+      motors_hard_stop();
+      switch_direction();
+      movman_schedule_move(MOVE_FORWARD, TO_SEEK, IMMEDIATELY_WITH_OVERWRITE);
    }
 }
 

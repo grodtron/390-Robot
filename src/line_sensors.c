@@ -15,13 +15,11 @@ void line_sensors_init(){
    TCCR0A |=  (1 << WGM01);
    TCCR0B &= ~(1 << WGM02);
 
-   OCR0A = 127;
-
    TIMSK0 |= (1 << OCIE0A); // enable interrupt (page 102, atmega644 datasheet)
 
    // Turn on clock, 1MHz fcpu, with /8 prescaler, counting up to 63 gives a 512 us period
    TCCR0B |= (1 << CS01);
-   OCR0A = 128;
+   OCR0A = 49;
 }
 
 // Because we want max speed in this interrupt, and because we are only checking
