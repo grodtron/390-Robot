@@ -1,29 +1,25 @@
 #ifndef ADC_H_
 #define ADC_H_
 
-typedef enum {
-   LEFT_LINE_SENSOR  = 0,
-   RIGHT_LINE_SENSOR = 1,
-   LEFT_PROX_SENSOR  = 2,
-   RIGHT_PROX_SENSOR = 3
-} sensor_t;
+#define N_SENSORS 6
 
 typedef enum {
-   LINE_LEFT  = 1,
-   LINE_RIGHT = 2,
-   LINE_BOTH  = 1 | 2,
-   LINE_NONE  = 0
-} line_dir_t;
+   FR_SENSOR = 0,
+   FL_SENSOR = 1,
+   L_SENSOR  = 2,
+   BL_SENSOR = 3,
+   BR_SENSOR = 4,
+   R_SENSOR  = 5
+} sensor_t;
+
 
 void adc_init();
 
 // NB - assume init_adc called already
 void adc_start();
 
-line_dir_t adc_where_is_line();
+void adc_switch_direction();
 
-void adc_get_prox_readings(uint8_t * left, uint8_t * right);
-
-
+extern uint8_t adc_sensor_readings[N_SENSORS];
 
 #endif

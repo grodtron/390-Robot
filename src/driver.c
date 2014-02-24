@@ -8,8 +8,10 @@
 // no point in making headers for these
 void robot_main();
 void line_sensors_main();
+void range_sensors_main();
 void motors_main();
 void ring_robot_main();
+void tracking_ring_robot_main();
 
 int main()
 {
@@ -33,6 +35,10 @@ int main()
          motors_main();
       case 3:
          ring_robot_main();
+      case 4:
+         range_sensors_main();
+      case 7:
+         tracking_ring_robot_main();
       default:
          break;
    }

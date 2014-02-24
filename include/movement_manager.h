@@ -35,15 +35,14 @@ typedef enum {
    FORWARD_THEN_WIDE_TURN_RIGHT,
    SEARCH_PATTERN,
    SMALL_MOVE_FORWARD,
-   MOVE_FORWARD
+   MOVE_FORWARD,
+   SWITCH_DIRECTION_THEN_MOVE_FORWARD
 } movement_t;
 
 void movman_init();
 
-bool movman_current_move_completed();
+bool movman_current_move_completed(bool);
 
 bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_time_t);
-
-void movman_switch_direction();
 
 #endif

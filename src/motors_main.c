@@ -10,34 +10,32 @@
 
 #include "../include/switch_direction.h"
 
+#include "../include/leds.h"
+
 void blink_one(){
    int i;
    for(i = 0; i < 2*5; ++i){
-      PORTA ^= (1<<PA7);
+      led_toggle_fl();
       _delay_ms(100);
    }
 }
 void blink_all(){
    int i;
    for(i = 0; i < 2*10; ++i){
-      PORTA ^= (1<<PA7)|(1<<PA6);
-      PORTD ^= (1<<PD7)|(1<<PD6);
+      led_toggle_fl();
+      led_toggle_fr();
+      led_toggle_bl();
+      led_toggle_br();
       _delay_ms(100);
    }
 }
 
 void motors_main()
 {
-
-   DDRA |= (1<<PA6)|(1<<PA7);
-   DDRD |= (1<<PD6)|(1<<PD7);
-
-   PORTA |= (1<<PA6)|(1<<PA7);
-   PORTD |= (1<<PD6)|(1<<PD7);
+   iodefs_init();
+   leds_init();
 
    blink_all();
-
-   iodefs_init();
 
    motors_init();
    movman_init();
@@ -60,7 +58,7 @@ void motors_main()
 
          case MOVEMENT_COMPLETE:
 
-            if(movman_current_move_completed()){
+            if(movman_current_move_completed(false)){
 
                i = (i+1)%3;
 

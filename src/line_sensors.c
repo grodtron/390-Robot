@@ -50,7 +50,7 @@ ISR(TIMER0_COMPA_vect){
       IO_LINESENS_PORT |= IO_LINESENS_MASK;
 
       // If the status has changed, keep track of that.
-      if(val != new_val){
+      if(/*TCNT0 < 10 &&*/ val != new_val){
          val = new_val;
          // TODO - Is it useful to notify for every change in line status?
          // should we only notify when there is a change and there is a line
@@ -72,11 +72,11 @@ line_position_t line_sensors_get_position(){
    if(val & io.linesens_fr){
       ret |= LINE_FRONT_RIGHT;
    }
-   if(val & io.linesens_rl){
-      ret |= LINE_REAR_LEFT;
+   if(val & io.linesens_bl){
+      ret |= LINE_BACK_LEFT;
    }
-   if(val & io.linesens_rr){
-      ret |= LINE_REAR_RIGHT;
+   if(val & io.linesens_br){
+      ret |= LINE_BACK_RIGHT;
    }
 
    return ret;

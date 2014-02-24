@@ -11,29 +11,14 @@
 
 #include "../include/switch_direction.h"
 
+#include "../include/leds.h"
+
 
 static void indicate_line(line_position_t pos){
-
-   if(pos & LINE_FRONT_LEFT){
-      PORTD &= ~(1<<PD6);
-   }else{
-      PORTD |=  (1<<PD6);
-   }
-   if(pos & LINE_FRONT_RIGHT){
-      PORTA &= ~(1<<PA6);
-   }else{
-      PORTA |=  (1<<PA6);
-   }
-   if(pos & LINE_REAR_LEFT){
-      PORTD &= ~(1<<PD7);
-   }else{
-      PORTD |=  (1<<PD7);
-   }
-   if(pos & LINE_REAR_RIGHT){
-      PORTA &= ~(1<<PA7);
-   }else{
-      PORTA |=  (1<<PA7);
-   }
+   led_set_fl(pos & LINE_FRONT_LEFT);
+   led_set_fr(pos & LINE_FRONT_RIGHT);
+   led_set_bl(pos & LINE_BACK_LEFT);
+   led_set_br(pos & LINE_BACK_RIGHT);
 }
 
 static void avoid_line(line_position_t pos){
@@ -52,22 +37,17 @@ static void handle_line(){
 
 void ring_robot_main()
 {
-
-   DDRA |= (1<<PA6)|(1<<PA7);
-   DDRD |= (1<<PD6)|(1<<PD7);
-
-   PORTA |= (1<<PA6)|(1<<PA7);
-   PORTD |= (1<<PD6)|(1<<PD7);
+   iodefs_init();
+   leds_init();
 
    {
       int i;
       for(i = 0; i < (2*10); ++i){
-         PORTA ^= (1<<PA7);
+         led_toggle_fl();
          _delay_ms(100);
       }
    }
 
-   iodefs_init();
    line_sensors_init();
    motors_init();
    movman_init();
@@ -87,7 +67,7 @@ void ring_robot_main()
             handle_line();
             break;
          case MOVEMENT_COMPLETE:
-            if(movman_current_move_completed()){
+            if(movman_current_move_completed(false)){
                movman_schedule_move(MOVE_FORWARD, TO_SEEK, IMMEDIATELY);
             }
          default:

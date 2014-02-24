@@ -7,6 +7,10 @@
 #include "../include/movement_manager.h"
 #include "../include/static_assert.h"
 
+#include "../include/switch_direction.h"
+
+#include "../include/unused_param.h"
+
 // If we're testing algorithmic stuff...
 #ifndef __AVR__
 
@@ -72,15 +76,11 @@ void movman_init(){
    current_move = 0;
 }
 
-void movman_switch_direction(){
-   movman_init();
-}
-
 // TODO - this seems like a really bad way to handle this... making the caller
 // responsible for implementation details shit...
-bool movman_current_move_completed(){
+bool movman_current_move_completed(bool force){
 
-   if(motors_movement_in_progress()){
+   if(!force && motors_movement_in_progress()){
       // Bullshit, the move's not complete at all!
       //
       // But seriously, when we overwrite moves with higher priority
@@ -127,6 +127,17 @@ int8_t next_available_index( uint8_t length, movement_reason_t reason, bool over
 
 }
 
+static void movman_switch_direction(uint8_t a, motor_dir_t b, motor_turn_dir_t c, uint16_t d, uint16_t e){
+
+   UNUSED_PARAM(a);
+   UNUSED_PARAM(b);
+   UNUSED_PARAM(c);
+   UNUSED_PARAM(d);
+   UNUSED_PARAM(e);
+
+   switch_direction();
+   movman_current_move_completed(true);
+}
 
 bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_time_t when){
 
@@ -171,8 +182,13 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
          move_queue[i].speed      = 255; \
          move_queue[i].dir        = DIRECTION; \
          move_queue[i].turn_dir   = TURN_DIRECTION; \
-         move_queue[i].param      = 15; /*radius*/  \
+         move_queue[i].param      = 45; /*radius*/  \
          move_queue[i].timeout    = TIMEOUT; \
+         move_queue[i].reason     = reason; \
+         i = (i + 1) % QUEUELEN;
+
+   #define SWITCH_DIRECTION() \
+         move_queue[i].move_funct = &movman_switch_direction; \
          move_queue[i].reason     = reason; \
          i = (i + 1) % QUEUELEN;
 
@@ -186,6 +202,13 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
          2,
          PAUSE(4875)
          MOVE_STRAIGHT(FWD, UINT16_MAX)
+      )
+
+      DEFINE_MOVE(
+      SWITCH_DIRECTION_THEN_MOVE_FORWARD,
+         2,
+         SWITCH_DIRECTION()
+         MOVE_STRAIGHT(FWD,150)
       )
 
       DEFINE_MOVE(
@@ -220,7 +243,7 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
       DEFINE_MOVE(
       SMALL_MOVE_FORWARD,
          1,
-         MOVE_STRAIGHT(FWD, 200)
+         MOVE_STRAIGHT(FWD, 100)
       )
 
       DEFINE_MOVE(
@@ -265,6 +288,7 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
    #undef MOVE_STRAIGHT
    #undef ROTATE
    #undef TURN
+   #undef SWITCH_DIRECTION
 }
 
 #ifndef __AVR__

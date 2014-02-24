@@ -2,7 +2,7 @@
 
 #include "../include/motors.h"
 #include "../include/iodefs.h"
-#include "../include/movement_manager.h"
+#include "../include/adc.h"
 
 void switch_direction(){
 
@@ -10,7 +10,7 @@ void switch_direction(){
 
    motors_switch_direction();
    iodefs_switch_direction();
-   movman_switch_direction();
+   adc_switch_direction();
 
    sei();
 

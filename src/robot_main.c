@@ -35,7 +35,7 @@ void handle_line_detected(){
    }
 }
 
-void handle_rear_contact(){
+void handle_back_contact(){
    movman_schedule_move(LONG_ROTATE_LEFT, TO_DEFEND, IMMEDIATELY_WITH_OVERWRITE);
 }
 
@@ -189,8 +189,8 @@ int main()
          case CONTACT_DETECTED_FRONT:
             handle_front_contact();
             break;
-         case CONTACT_DETECTED_REAR:
-            handle_rear_contact();
+         case CONTACT_DETECTED_BACK:
+            handle_back_contact();
             break;
          case MOVEMENT_COMPLETE:
             handle_movement_complete();

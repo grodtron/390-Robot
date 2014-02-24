@@ -44,35 +44,35 @@ static uint16_t current_timeout;
 
 #define BRAKE_L_MOTOR(dir)   do{\
                                     SET_L_MOTOR_SPEED(255); \
-                                    *io.lr_motor_port |= io.lr_motor_mask;  \
-                                    *io.lf_motor_port |= io.lf_motor_mask;  \
+                                    *io.bl_motor_port |= io.bl_motor_mask;  \
+                                    *io.fl_motor_port |= io.fl_motor_mask;  \
                                }while(0)
 
 #define BRAKE_R_MOTOR(dir)   do{\
                                     SET_R_MOTOR_SPEED(255); \
-                                    *io.rr_motor_port |= io.rr_motor_mask;  \
-                                    *io.rf_motor_port |= io.rf_motor_mask;  \
+                                    *io.br_motor_port |= io.br_motor_mask;  \
+                                    *io.fr_motor_port |= io.fr_motor_mask;  \
                                }while(0)
 
 #define SET_L_MOTOR_DIR(dir)   do{\
                                     if( (dir) == FWD ){ \
                                        /* NB turn off before turn on */ \
-                                       *io.lr_motor_port &= ~io.lr_motor_mask;  \
-                                       *io.lf_motor_port |=  io.lf_motor_mask;  \
+                                       *io.bl_motor_port &= ~io.bl_motor_mask;  \
+                                       *io.fl_motor_port |=  io.fl_motor_mask;  \
                                     }else{ \
-                                       *io.lf_motor_port &= ~io.lf_motor_mask;  \
-                                       *io.lr_motor_port |=  io.lr_motor_mask;  \
+                                       *io.fl_motor_port &= ~io.fl_motor_mask;  \
+                                       *io.bl_motor_port |=  io.bl_motor_mask;  \
                                     } \
                                }while(0)
 
 #define SET_R_MOTOR_DIR(dir)   do{\
                                     if( (dir) == FWD ){ \
                                        /* NB turn off before turn on */ \
-                                       *io.rr_motor_port &= ~io.rr_motor_mask;  \
-                                       *io.rf_motor_port |=  io.rf_motor_mask;  \
+                                       *io.br_motor_port &= ~io.br_motor_mask;  \
+                                       *io.fr_motor_port |=  io.fr_motor_mask;  \
                                     }else{ \
-                                       *io.rf_motor_port &= ~io.rf_motor_mask;  \
-                                       *io.rr_motor_port |=  io.rr_motor_mask;  \
+                                       *io.fr_motor_port &= ~io.fr_motor_mask;  \
+                                       *io.br_motor_port |=  io.br_motor_mask;  \
                                     } \
                                }while(0)
 
@@ -86,10 +86,10 @@ void motors_init(){
 #ifdef __AVR__
 
    // Set motor control pins as outputs
-   *io.lf_motor_ddr |= io.lf_motor_mask;
-   *io.lr_motor_ddr |= io.lr_motor_mask;
-   *io.rf_motor_ddr |= io.rf_motor_mask;
-   *io.rr_motor_ddr |= io.rr_motor_mask;
+   *io.fl_motor_ddr |= io.fl_motor_mask;
+   *io.bl_motor_ddr |= io.bl_motor_mask;
+   *io.fr_motor_ddr |= io.fr_motor_mask;
+   *io.br_motor_ddr |= io.br_motor_mask;
 
    // Set motor PWM pins as outputs
    *io.lpwm_motor_ddr |= io.lpwm_motor_mask;
@@ -223,7 +223,7 @@ void motors_turn_in_arc(uint8_t speed, motor_dir_t dir, motor_turn_dir_t turn_di
 
    UNUSED_PARAM(radius);
 
-   uint8_t slow_speed = 0;//(uint8_t)( (((uint16_t)speed)*(radius - 146)) / ((uint16_t)radius) );
+   uint8_t slow_speed = 127;//(uint8_t)( (((uint16_t)speed)*(radius - 146)) / ((uint16_t)radius) );
 
 
    cli();

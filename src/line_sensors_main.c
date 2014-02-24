@@ -6,42 +6,23 @@
 #include "../include/event_queue.h"
 #include "../include/line_sensors.h"
 #include "../include/iodefs.h"
+#include "../include/leds.h"
 
 void handle_line(){
    line_position_t pos = line_sensors_get_position();
 
-   if(pos & LINE_FRONT_LEFT){
-      PORTD &= ~(1<<PD6);
-   }else{
-      PORTD |=  (1<<PD6);
-   }
-   if(pos & LINE_FRONT_RIGHT){
-      PORTA &= ~(1<<PA6);
-   }else{
-      PORTA |=  (1<<PA6);
-   }
-   if(pos & LINE_REAR_LEFT){
-      PORTD &= ~(1<<PD7);
-   }else{
-      PORTD |=  (1<<PD7);
-   }
-   if(pos & LINE_REAR_RIGHT){
-      PORTA &= ~(1<<PA7);
-   }else{
-      PORTA |=  (1<<PA7);
-   }
+   led_set_fl(pos & LINE_FRONT_LEFT);
+   led_set_fr(pos & LINE_FRONT_RIGHT);
+   led_set_bl(pos & LINE_BACK_LEFT);
+   led_set_br(pos & LINE_BACK_RIGHT);
 }
 
 void line_sensors_main()
 {
 
-   DDRA |= (1<<PA6)|(1<<PA7);
-   DDRD |= (1<<PD6)|(1<<PD7);
-
-   PORTA |= (1<<PA6)|(1<<PA7);
-   PORTD |= (1<<PD6)|(1<<PD7);
-
    iodefs_init();
+
+   leds_init();
    line_sensors_init();
    event_q_init();
 
