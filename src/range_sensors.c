@@ -45,8 +45,8 @@ void range_sensors_init(){
    sensor_channel[BR_SENSOR] = 3;
    sensor_channel[R_SENSOR ] = 4;
 
-   // ADMUX  = (0 << REFS1)  | (0 << REFS0) // External AREF (page 248)
-   ADMUX  = (1 << REFS1)  | (1 << REFS0) // Internal 2.56 reference (page 248)
+   ADMUX  = (0 << REFS1)  | (0 << REFS0) // External AREF (page 248)
+   // ADMUX  = (1 << REFS1)  | (1 << REFS0) // Internal 2.56 reference (page 248)
           | (1 << ADLAR)                 // Left adjust the result, we only need 8 bits really
           ;
 
