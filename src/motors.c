@@ -76,7 +76,7 @@ static uint16_t current_timeout;
                                     } \
                                }while(0)
 
-#define INVERTED_OUTPUT 0
+#define INVERTED_OUTPUT 1
 
 void motors_init(){
 
@@ -127,6 +127,10 @@ void motors_init(){
 // All tweens will take abs(target_speed - current_speed)/256 seconds
 #ifdef __AVR__
 ISR(TIMER1_OVF_vect){
+
+   // Let this ISR be interrupted by the line sensor ISR, timing is more important there
+   sei();
+
    static uint8_t n_ticks = 0;
 
    ++n_ticks;
@@ -155,6 +159,7 @@ ISR(TIMER1_OVF_vect){
 }
 #endif
 
+#define FADE_TWEENS 0
 // Update `cur_speed` and `cur_dir` so that they point to the
 // next values for the tween. Returns true if the tween is complete
 // after this update, and false otherwise. Also updates `tw->complete`
@@ -162,6 +167,7 @@ ISR(TIMER1_OVF_vect){
 // Assumes that the tween is valid and is not complete
 bool _update_tween(motor_tween_t * tw){
 
+   #if FADE_TWEENS
    // If we are not moving currently, then we can change directions
    if(tw->curr_speed == 0){
       tw->curr_dir = tw->targ_dir;
@@ -177,8 +183,19 @@ bool _update_tween(motor_tween_t * tw){
    }
 
    return tw->complete = (tw->curr_speed == tw->targ_speed && tw->curr_dir == tw->targ_dir);
+   #else
+   // no tween for you!
+
+   tw->complete = true;
+   tw->curr_speed = tw->targ_speed;
+   tw->curr_dir   = tw->targ_dir;
+
+   return true;
+
+   #endif
 
 }
+#undef FADE_TWEENS
 
 // Tween a motor's speed, overwriting any previously existing tween.
 void _tween_motor_speed(motor_tween_t * tw, uint8_t speed, motor_dir_t dir){

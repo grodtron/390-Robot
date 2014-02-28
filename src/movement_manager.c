@@ -198,58 +198,15 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
 
 
       DEFINE_MOVE(
-      WAIT_5_SECONDS_THEN_FULL_FORWARD_FOR_A_LONG_TIME,
-         2,
-         PAUSE(4875)
-         MOVE_STRAIGHT(FWD, UINT16_MAX)
-      )
-
-      DEFINE_MOVE(
-      SWITCH_DIRECTION_THEN_MOVE_FORWARD,
-         2,
-         SWITCH_DIRECTION()
-         MOVE_STRAIGHT(FWD,150)
+      LONG_ROTATE_LEFT,
+         1,
+         ROTATE(LEFT, 900)
       )
 
       DEFINE_MOVE(
       MOVE_FORWARD,
          1,
          MOVE_STRAIGHT(FWD, 500)
-      )
-
-
-      DEFINE_MOVE(
-      SEARCH_PATTERN,
-         3,
-         MOVE_STRAIGHT(FWD, 550)
-         ROTATE(LEFT, 350)
-         ROTATE(RIGHT, 300)
-      )
-
-      DEFINE_MOVE(
-      BACKUP_THEN_TURN_90_CW,
-         2,
-         MOVE_STRAIGHT(REV, 500)
-         ROTATE(RIGHT, 450)
-      )
-
-      DEFINE_MOVE(
-      BACKUP_THEN_TURN_30_CCW,
-         2,
-         MOVE_STRAIGHT(REV, 500)
-         ROTATE(LEFT, 350)
-      )
-
-      DEFINE_MOVE(
-      SMALL_MOVE_FORWARD,
-         1,
-         MOVE_STRAIGHT(FWD, 100)
-      )
-
-      DEFINE_MOVE(
-      LONG_ROTATE_LEFT,
-         1,
-         ROTATE(LEFT, 900)
       )
 
       DEFINE_MOVE(
@@ -262,6 +219,33 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
       ROTATE_RIGHT,
          1,
          ROTATE(RIGHT, 375)
+      )
+
+      DEFINE_MOVE(
+      SWITCH_DIRECTION_THEN_MOVE_FORWARD,
+         2,
+         SWITCH_DIRECTION()
+         MOVE_STRAIGHT(FWD,150)
+      )
+
+      DEFINE_MOVE(
+      ROTATE_90_RIGHT_THEN_MOVE_FORWARD,
+         2,
+         ROTATE(RIGHT, 450)
+         MOVE_STRAIGHT(FWD, 150)
+      )
+
+      DEFINE_MOVE(
+      ROTATE_90_LEFT_THEN_MOVE_FORWARD,
+         2,
+         ROTATE(LEFT, 450)
+         MOVE_STRAIGHT(FWD, 150)
+      )
+
+      DEFINE_MOVE(
+      SMALL_MOVE_FORWARD,
+         1,
+         MOVE_STRAIGHT(FWD, 100)
       )
 
       DEFINE_MOVE(

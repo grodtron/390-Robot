@@ -17,7 +17,7 @@ LDFLAGS = -mmcu=$(MCU) -O$(OPT_LVL) $(WARNINGS)
 # Gotta call it something...
 PROJ    = robot
 # Source files that we will use
-SRCS    := driver.c line_sensors_main.c motors_main.c motors.c line_sensors.c event_queue.c iodefs.c movement_manager.c ring_robot_main.c switch_direction.c adc.c range_sensors_main.c tracking_ring_robot_main.c
+SRCS    := driver.c line_sensors_main.c motors_main.c motors.c line_sensors.c event_queue.c iodefs.c movement_manager.c ring_robot_main.c switch_direction.c range_sensors.c range_sensors_main.c tracking_ring_robot_main.c handlers/line_sensors.c handlers/range_sensors.c
 
 # Stuff related to generating the actual hex format
 OBJCOPY = avr-objcopy
@@ -39,7 +39,8 @@ ALL_TRG = $(HEX_TRG)
 
 
 OBJ_DIR = .obj
-MAKE_OBJ_DIR = mkdir -p $(OBJ_DIR)
+# TODO hack
+MAKE_OBJ_DIR = mkdir -p $(OBJ_DIR)/handlers
 SRC_DIR =  src
 
 # Generate exact dependencies using a smart method that I found online.
@@ -51,7 +52,8 @@ SRC_DIR =  src
 #
 # TODO - find the link I got this method from
 DEP_DIR     = .dep
-MAKE_DEPEND = mkdir -p $(DEP_DIR); \
+# TODO handlers dir hack
+MAKE_DEPEND = mkdir -p $(DEP_DIR)/handlers; \
 				  $(CC) -MM -MT $(OBJ_DIR)/$*.o $(CCFLAGS) $< -o $(DEP_DIR)/$*.d; \
 
 # Phony targets
@@ -67,13 +69,6 @@ clean:
 	rm -rf $(OBJ_DIR)
 	rm -f $(PROJ).elf
 	rm -f $(PROJ).hex
-
-# Here's how we make our dep dir. (Not alll that complicated)
-$(DEP_DIR):
-	mkdir -p $(DEP_DIR)
-
-$(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
 
 # Here is where all the .dep file are #include'd
 -include $(SRCS:%.c=$(DEP_DIR)/%.d)

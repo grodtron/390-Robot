@@ -13,13 +13,13 @@ typedef enum {
 } sensor_t;
 
 
-void adc_init();
+void range_sensors_init();
 
 // NB - assume init_adc called already
-void adc_start();
+void range_sensors_start();
 
-void adc_switch_direction();
+void range_sensors_switch_direction();
 
-extern uint8_t adc_sensor_readings[N_SENSORS];
+extern uint8_t range_sensors_sensor_readings[N_SENSORS];
 
 #endif

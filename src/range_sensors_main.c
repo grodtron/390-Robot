@@ -4,18 +4,28 @@
 #include <util/delay.h>
 
 #include "../include/event_queue.h"
-#include "../include/adc.h"
+#include "../include/range_sensors.h"
 #include "../include/iodefs.h"
 #include "../include/leds.h"
 
 static void handle_new_prox(){
 
+   static uint16_t readings[6] = {0,0,0,0,0,0};
+
    sensor_t sensor = 0;
    uint8_t max = 0;
    sensor_t max_sensor = R_SENSOR;
+
    for(sensor = 0; sensor < N_SENSORS; ++sensor){
-      if(adc_sensor_readings[sensor] > max){
-         max = adc_sensor_readings[sensor];
+
+      uint8_t val = readings[sensor];
+      val /= 2;
+      val += range_sensors_sensor_readings[sensor];
+
+      readings[sensor] = val;
+
+      if(val > max){
+         max = val;
          max_sensor = sensor;
       }
    }
@@ -32,16 +42,14 @@ void range_sensors_main()
    iodefs_init();
 
    leds_init();
-   adc_init();
+   range_sensors_init();
    event_q_init();
 
    sei();
 
-   adc_start();
+   range_sensors_start();
 
    while(1){
-
-      // Testing in the lab showed this runs every ~95us
 
       event_t e = event_q_get_next_event();
 

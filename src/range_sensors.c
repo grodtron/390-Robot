@@ -3,7 +3,7 @@
 
 #include "../include/static_assert.h"
 
-#include "../include/adc.h"
+#include "../include/range_sensors.h"
 #include "../include/leds.h"
 #include "../include/event_queue.h"
 #include "../include/motors.h"
@@ -18,11 +18,11 @@ static sensor_t current_sensor;
 
 static uint8_t sensor_channel[N_SENSORS];
 
-uint8_t adc_sensor_readings[N_SENSORS] = {0,0,0,0,0,0};
+uint8_t range_sensors_sensor_readings[N_SENSORS] = {0,0,0,0,0,0};
 
 static const uint8_t ADMUX_MASK = ~(  (1 << MUX0) | (1 << MUX1) | (1 << MUX2)  );
 
-void adc_init(){
+void range_sensors_init(){
 
    static_assert(FR_SENSOR < N_SENSORS);
    static_assert(FR_SENSOR >= 0);
@@ -40,10 +40,10 @@ void adc_init(){
    // Assignment based on physical connections
    sensor_channel[FR_SENSOR] = 1;
    sensor_channel[FL_SENSOR] = 0;
-   sensor_channel[L_SENSOR ] = 4;
+   sensor_channel[L_SENSOR ] = 5;
    sensor_channel[BL_SENSOR] = 2;
    sensor_channel[BR_SENSOR] = 3;
-   sensor_channel[R_SENSOR ] = 5;
+   sensor_channel[R_SENSOR ] = 4;
 
    // ADMUX  = (0 << REFS1)  | (0 << REFS0) // External AREF (page 248)
    ADMUX  = (1 << REFS1)  | (1 << REFS0) // Internal 2.56 reference (page 248)
@@ -85,7 +85,7 @@ void adc_init(){
 }
 
 // NB - assume init_adc called already
-void adc_start(){
+void range_sensors_start(){
    count = 0;
    current_sensor = FR_SENSOR;
 
@@ -95,7 +95,7 @@ void adc_start(){
 
 }
 
-void adc_switch_direction(){
+void range_sensors_switch_direction(){
 
    UINT8_SWAP(sensor_channel[FR_SENSOR], sensor_channel[BL_SENSOR]);
    UINT8_SWAP(sensor_channel[FL_SENSOR], sensor_channel[BR_SENSOR]);
@@ -147,7 +147,7 @@ ISR(ADC_vect){
    //
    // Even though it seems shitty to throw out a bunch of readings... (TODO)
    if(count == 3){
-      adc_sensor_readings[current_sensor]  = reading;
+      range_sensors_sensor_readings[current_sensor]  = reading;
    }
 
    // Notify that there is a new reading available

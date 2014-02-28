@@ -40,11 +40,11 @@ void iodefs_switch_direction(){
 void iodefs_init(){
    io.fl_motor_port = &PORTC;
    io.fl_motor_ddr  = &DDRC;
-   io.fl_motor_mask = 1 << PC3;
+   io.fl_motor_mask = 1 << PC2;
 
    io.bl_motor_port = &PORTC;
    io.bl_motor_ddr  = &DDRC;
-   io.bl_motor_mask = 1 << PC2;
+   io.bl_motor_mask = 1 << PC3;
 
    io.fr_motor_port = &PORTC;
    io.fr_motor_ddr  = &DDRC;
@@ -71,23 +71,23 @@ void iodefs_init(){
 
 
    io.led_fl_ddr = &DDRD;
-   io.led_fr_ddr = &DDRA;
+   io.led_fr_ddr = &DDRD;
    io.led_l_ddr  = NULL;
-   io.led_br_ddr = &DDRA;
+   io.led_br_ddr = &DDRD;
    io.led_bl_ddr = &DDRD;
    io.led_r_ddr  = NULL;
 
    io.led_fl_port = &PORTD;
-   io.led_fr_port = &PORTA;
+   io.led_fr_port = &PORTD;
    io.led_l_port  = NULL;
-   io.led_br_port = &PORTA;
+   io.led_br_port = &PORTD;
    io.led_bl_port = &PORTD;
    io.led_r_port  = NULL;
 
-   io.led_fl_mask = 1 << PD6;
-   io.led_fr_mask = 1 << PA6;
+   io.led_fl_mask = 1 << PD0;
+   io.led_fr_mask = 1 << PD1;
    io.led_l_mask  = 0;
-   io.led_br_mask = 1 << PA7;
+   io.led_br_mask = 1 << PD6;
    io.led_bl_mask = 1 << PD7;
    io.led_r_mask  = 0;
 
