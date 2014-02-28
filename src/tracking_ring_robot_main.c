@@ -19,32 +19,30 @@
 #include "../include/handlers/range_sensors.h"
 
 
+static void startup_loop(){
 
+   // Startup wait movement (TODO)
+   movman_schedule_move(WAIT_3_SECONDS, TO_MEET_STARTUP_REQUIREMENT, IMMEDIATELY);
 
-void tracking_ring_robot_main()
-{
-   iodefs_init();
-   leds_init();
+   while(1){
+      event_t e = event_q_get_next_event();
 
-   {
-      int i;
-      for(i = 0; i < (2*10); ++i){
-         led_toggle_fl();
-         _delay_ms(100);
+      switch(e){
+
+         case MOVEMENT_COMPLETE:
+            handle_range_sensors_react_accumulate();
+            return;
+
+         case NEW_PROXIMITY_READINGS:
+            handle_range_sensors_accumulate();
+            break;
+         default:
+            break;
       }
    }
+}
 
-   line_sensors_init();
-   motors_init();
-   movman_init();
-   range_sensors_init();
-   event_q_init();
-
-   sei();
-
-   range_sensors_start();
-
-   movman_schedule_move(MOVE_FORWARD, TO_SEEK, IMMEDIATELY);
+static void main_loop(){
 
    while(1){
 
@@ -57,6 +55,8 @@ void tracking_ring_robot_main()
             break;
          case MOVEMENT_COMPLETE:
             if(movman_current_move_completed(false)){
+               // TODO - search pattern
+               // statefullness?
                movman_schedule_move(MOVE_FORWARD, TO_SEEK, IMMEDIATELY);
             }
          case NEW_PROXIMITY_READINGS:
@@ -66,6 +66,31 @@ void tracking_ring_robot_main()
             break;
 
       }
-
    }
+}
+
+
+
+void tracking_ring_robot_main()
+{
+   iodefs_init();
+   leds_init();
+   motors_init();
+   movman_init();
+   range_sensors_init();
+   event_q_init();
+
+   sei();
+
+   range_sensors_start();
+
+   // In this loop, we wait for precisely 3 seconds, accumulating
+   // sensor readings on the two sides the whole time. Once the 3 seconds
+   // ends, we determine which side the opponent is on, and attack
+   startup_loop();
+
+   //
+   line_sensors_init();
+   main_loop();
+
 }

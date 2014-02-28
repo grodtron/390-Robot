@@ -23,6 +23,7 @@ typedef enum {
 
 typedef enum {
    ROTATE_LEFT,
+   WAIT_3_SECONDS,
    LONG_ROTATE_LEFT,
    ROTATE_RIGHT,
    ROTATE_90_RIGHT_THEN_MOVE_FORWARD,

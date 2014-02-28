@@ -198,6 +198,12 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
 
 
       DEFINE_MOVE(
+      WAIT_3_SECONDS,
+         1,
+         PAUSE(293)
+      )
+
+      DEFINE_MOVE(
       LONG_ROTATE_LEFT,
          1,
          ROTATE(LEFT, 900)
