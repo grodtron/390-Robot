@@ -34,6 +34,8 @@ DEFINE_TOGGLE(l)
 DEFINE_TOGGLE(br)
 DEFINE_TOGGLE(bl)
 DEFINE_TOGGLE(r)
+DEFINE_TOGGLE(white)
+DEFINE_TOGGLE(orange)
 
 DEFINE_SET(fr)
 DEFINE_SET(fl)
@@ -41,6 +43,8 @@ DEFINE_SET(l)
 DEFINE_SET(br)
 DEFINE_SET(bl)
 DEFINE_SET(r)
+DEFINE_SET(white)
+DEFINE_SET(orange)
 
 inline void leds_init(){
    *DDR(fr) |= MASK(fr);
@@ -60,6 +64,13 @@ inline void leds_init(){
 
    *DDR(r)  |= MASK(r);
    *PORT(r)  |= MASK(r);
+
+   *DDR(orange) |= MASK(orange);
+   *PORT(orange) |= MASK(orange);
+
+   *DDR(white)  |= MASK(white);
+   *PORT(white)  |= MASK(white);
+
 }
 
 #undef _PASTE2

@@ -48,6 +48,8 @@ typedef struct {
    volatile uint8_t * led_br_ddr;
    volatile uint8_t * led_bl_ddr;
    volatile uint8_t * led_r_ddr;
+   volatile uint8_t * led_orange_ddr;
+   volatile uint8_t * led_white_ddr;
 
    volatile uint8_t * led_fl_port;
    volatile uint8_t * led_fr_port;
@@ -55,6 +57,8 @@ typedef struct {
    volatile uint8_t * led_br_port;
    volatile uint8_t * led_bl_port;
    volatile uint8_t * led_r_port;
+   volatile uint8_t * led_orange_port;
+   volatile uint8_t * led_white_port;
 
             uint8_t   led_fl_mask;
             uint8_t   led_fr_mask;
@@ -62,6 +66,8 @@ typedef struct {
             uint8_t   led_bl_mask;
             uint8_t   led_br_mask;
             uint8_t   led_r_mask;
+            uint8_t   led_orange_mask;
+            uint8_t   led_white_mask;
 
 
 } iodef_t;

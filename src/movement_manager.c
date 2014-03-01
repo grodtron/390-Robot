@@ -200,7 +200,13 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
       DEFINE_MOVE(
       WAIT_3_SECONDS,
          1,
-         PAUSE(293)
+         PAUSE(2929)
+      )
+
+      DEFINE_MOVE(
+      LONG_ROTATE_RIGHT,
+         1,
+         ROTATE(RIGHT, 900)
       )
 
       DEFINE_MOVE(
@@ -237,14 +243,14 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
       DEFINE_MOVE(
       ROTATE_90_RIGHT_THEN_MOVE_FORWARD,
          2,
-         ROTATE(RIGHT, 450)
+         ROTATE(RIGHT, 225)
          MOVE_STRAIGHT(FWD, 150)
       )
 
       DEFINE_MOVE(
       ROTATE_90_LEFT_THEN_MOVE_FORWARD,
          2,
-         ROTATE(LEFT, 450)
+         ROTATE(LEFT, 225)
          MOVE_STRAIGHT(FWD, 150)
       )
 

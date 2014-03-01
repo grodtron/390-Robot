@@ -21,7 +21,6 @@
 
 static void startup_loop(){
 
-   // Startup wait movement (TODO)
    movman_schedule_move(WAIT_3_SECONDS, TO_MEET_STARTUP_REQUIREMENT, IMMEDIATELY);
 
    while(1){
@@ -30,8 +29,10 @@ static void startup_loop(){
       switch(e){
 
          case MOVEMENT_COMPLETE:
-            handle_range_sensors_react_accumulate();
-            return;
+            if(movman_current_move_completed(false)){
+               handle_range_sensors_react_accumulate();
+               return;
+            }
 
          case NEW_PROXIMITY_READINGS:
             handle_range_sensors_accumulate();
@@ -60,7 +61,7 @@ static void main_loop(){
                movman_schedule_move(MOVE_FORWARD, TO_SEEK, IMMEDIATELY);
             }
          case NEW_PROXIMITY_READINGS:
-            handle_range_sensors(false);
+            handle_range_sensors(true);
             break;
          default:
             break;
@@ -79,6 +80,7 @@ void tracking_ring_robot_main()
    movman_init();
    range_sensors_init();
    event_q_init();
+   line_sensors_init();
 
    sei();
 
@@ -90,7 +92,6 @@ void tracking_ring_robot_main()
    startup_loop();
 
    //
-   line_sensors_init();
    main_loop();
 
 }

@@ -91,4 +91,11 @@ void iodefs_init(){
    io.led_bl_mask = 1 << PD7;
    io.led_r_mask  = 0;
 
+   io.led_orange_port = &PORTA;
+   io.led_white_port  = &PORTA;
+   io.led_orange_ddr  = &DDRA;
+   io.led_white_ddr   = &DDRA;
+   io.led_orange_mask = 1 << PA6;
+   io.led_white_mask  = 1 << PA7;
+
 }
