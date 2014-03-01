@@ -237,21 +237,21 @@ bool movman_schedule_move(movement_t move, movement_reason_t reason, movement_ti
       SWITCH_DIRECTION_THEN_MOVE_FORWARD,
          2,
          SWITCH_DIRECTION()
-         MOVE_STRAIGHT(FWD,150)
+         MOVE_STRAIGHT(FWD,500)
       )
 
       DEFINE_MOVE(
       ROTATE_90_RIGHT_THEN_MOVE_FORWARD,
          2,
          ROTATE(RIGHT, 225)
-         MOVE_STRAIGHT(FWD, 150)
+         MOVE_STRAIGHT(FWD, 275)
       )
 
       DEFINE_MOVE(
       ROTATE_90_LEFT_THEN_MOVE_FORWARD,
          2,
          ROTATE(LEFT, 225)
-         MOVE_STRAIGHT(FWD, 150)
+         MOVE_STRAIGHT(FWD, 275)
       )
 
       DEFINE_MOVE(
